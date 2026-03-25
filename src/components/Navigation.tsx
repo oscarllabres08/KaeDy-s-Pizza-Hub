@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import {
-  Menu,
-  X,
   ShoppingCart,
   User,
   LogOut,
@@ -58,7 +56,8 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
   };
 
   return (
-    <nav className="bg-black text-yellow-400 shadow-lg fixed w-full top-0 z-50 border-b border-yellow-500/40">
+    <>
+      <nav className="bg-black text-yellow-400 shadow-lg fixed w-full top-0 z-50 border-b border-yellow-500/40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div
@@ -135,27 +134,8 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
             )}
           </div>
 
-          <div className="md:hidden flex items-center space-x-3">
-            {user && (
-              <button
-                onClick={() => handleNavigation('cart')}
-                className="relative"
-              >
-                <ShoppingCart className="w-6 h-6" />
-                {cartCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-yellow-400 text-black text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
-                    {cartCount}
-                  </span>
-                )}
-              </button>
-            )}
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="p-2 rounded-md hover:bg-yellow-500 hover:text-black transition-all"
-            >
-              {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
+          {/* Mobile: hamburger menu removed; bottom navigation handles navigation */}
+          <div className="md:hidden flex items-center space-x-3" />
         </div>
       </div>
 
@@ -264,6 +244,88 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
           </div>
         </div>
       )}
-    </nav>
+      </nav>
+
+      {/* Mobile bottom navigation (app-like) */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-black/90 border-t border-yellow-500/40 backdrop-blur">
+        <div className="grid grid-cols-5 items-center h-20 px-2">
+          <button
+            type="button"
+            onClick={() => handleNavigation('home')}
+            className={`flex flex-col items-center justify-center text-[10px] font-semibold transition-colors ${
+              currentPage === 'home' ? 'text-yellow-300' : 'text-gray-500'
+            }`}
+            aria-label="Home"
+          >
+            <Home className="w-6 h-6" />
+            <span className="mt-0.5">HOME</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleNavigation('menu')}
+            className={`flex flex-col items-center justify-center text-[10px] font-semibold transition-colors ${
+              currentPage === 'menu' ? 'text-yellow-300' : 'text-gray-500'
+            }`}
+            aria-label="Menu"
+          >
+            <UtensilsCrossed className="w-6 h-6" />
+            <span className="mt-0.5">MENU</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleNavigation('cart')}
+            className="flex items-center justify-center"
+            aria-label="Cart"
+          >
+            <div
+                className={`relative w-14 h-14 rounded-full flex items-center justify-center border transition-all -translate-y-0 ${
+                currentPage === 'cart' || currentPage === 'checkout'
+                  ? 'bg-yellow-400 text-black border-yellow-400'
+                  : 'bg-yellow-400/15 text-yellow-300 border-yellow-500/30'
+              }`}
+            >
+              <ShoppingCart className="w-7 h-7" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-yellow-400 text-black text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+                  {cartCount}
+                </span>
+              )}
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleNavigation('game')}
+            className={`flex flex-col items-center justify-center text-[10px] font-semibold transition-colors ${
+              currentPage === 'game' ? 'text-yellow-300' : 'text-gray-500'
+            }`}
+            aria-label="Game"
+          >
+            <Gamepad2 className="w-6 h-6" />
+            <span className="mt-0.5">GAME</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleNavigation(user ? 'profile' : 'auth')}
+            className={`flex flex-col items-center justify-center text-[10px] font-semibold transition-colors ${
+              user
+                ? currentPage === 'profile'
+                  ? 'text-yellow-300'
+                  : 'text-gray-500'
+                : currentPage === 'auth'
+                  ? 'text-yellow-300'
+                  : 'text-gray-500'
+            }`}
+            aria-label="Profile"
+          >
+            <User className="w-6 h-6" />
+            <span className="mt-0.5">PROFILE</span>
+          </button>
+        </div>
+      </nav>
+    </>
   );
 }

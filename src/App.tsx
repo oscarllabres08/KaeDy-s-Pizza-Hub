@@ -106,10 +106,12 @@ function AppContent() {
   return (
     <div className="min-h-screen flex flex-col pt-16 bg-gradient-to-br from-black to-neutral-900">
       <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
-      <main className="flex-1">
+      <main className="flex-1 pb-24 md:pb-0">
         {content}
       </main>
-      <Footer />
+      <div className="hidden md:block">
+        <Footer />
+      </div>
     </div>
   );
 }
