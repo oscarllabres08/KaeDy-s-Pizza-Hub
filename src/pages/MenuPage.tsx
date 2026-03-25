@@ -163,14 +163,14 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
         </div>
 
         <div className="mb-6 overflow-x-auto">
-          <div className="flex gap-3 pb-2 min-w-max">
+          <div className="flex gap-2 pb-2 min-w-max">
             {categories.map((category) => (
               <button
                 key={category}
                 onClick={() => {
                   setSelectedCategory(category);
                 }}
-                className={`px-5 py-2 rounded-lg font-semibold text-sm flex-none ${
+                className={`px-4 py-1.5 rounded-lg font-semibold text-xs sm:text-sm flex-none ${
                   selectedCategory === category
                     ? 'bg-yellow-400 text-black shadow-md'
                     : 'bg-neutral-800 text-gray-200 hover:bg-neutral-700'
@@ -308,14 +308,14 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
                           </div>
                         </div>
                         <div
-                          className="flex gap-2 pointer-events-auto"
+                          className="flex gap-1.5 pointer-events-auto"
                           onClick={(e) => e.stopPropagation()}
                           onKeyDown={(e) => e.stopPropagation()}
                         >
                           <button
                             type="button"
                             onClick={() => handleAddToCart(item)}
-                            className={`flex-1 min-h-[2.75rem] sm:min-h-[3rem] rounded-lg text-sm font-semibold transition-all px-3 py-2.5 leading-snug text-center whitespace-normal line-clamp-2 ${
+                            className={`flex-1 min-h-[1.85rem] sm:min-h-[2rem] rounded-md text-[10px] sm:text-[11px] font-semibold transition-all px-1.5 py-0.5 leading-tight text-center whitespace-normal line-clamp-2 ${
                               addedItems.has(item.id)
                                 ? 'bg-green-500 text-white'
                                 : 'bg-yellow-400 text-black hover:bg-yellow-300'
@@ -326,7 +326,7 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
                           <button
                             type="button"
                             onClick={() => handleBuyNow(item)}
-                            className="flex-1 min-h-[2.75rem] sm:min-h-[3rem] rounded-lg text-sm font-semibold border-2 border-yellow-400 text-yellow-300 hover:bg-yellow-400/10 transition-all px-3 py-2.5 leading-snug text-center whitespace-normal line-clamp-2"
+                            className="flex-1 min-h-[1.85rem] sm:min-h-[2rem] rounded-md text-[10px] sm:text-[11px] font-semibold border border-yellow-400 text-yellow-300 hover:bg-yellow-400/10 transition-all px-1.5 py-0.5 leading-tight text-center whitespace-nowrap"
                           >
                             Buy Now
                           </button>

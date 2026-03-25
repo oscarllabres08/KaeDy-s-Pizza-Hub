@@ -38,7 +38,6 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           alt="KaeDy's Pizza Hub Store"
           className="absolute inset-0 w-full h-full object-cover opacity-100  "
         />
-        <div className="absolute inset-0 bg-black bg-opacity-60"></div>
         <div className="absolute top-4 left-0 right-0 z-10 px-3 md:px-6">
           <div className="mx-auto max-w-6xl overflow-hidden rounded-md border border-yellow-400/40 bg-black/75 backdrop-blur-sm">
             <div className="marquee-track text-yellow-300 text-xs md:text-sm font-semibold py-2 whitespace-nowrap">
@@ -52,7 +51,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
         <div className="relative z-10 text-center text-white px-4 animate-fadeIn">
           <button
             onClick={() => onNavigate('menu')}
-            className="bg-yellow-400 text-black px-8 py-4 rounded-full text-lg font-semibold hover:bg-yellow-300 transition-all transform hover:scale-110 shadow-2xl animate-bounce"
+            className="bg-yellow-400 text-black px-8 py-4 rounded-full text-lg font-semibold hover:bg-[#ffe85a] transition-all transform hover:scale-110 shadow-2xl animate-bounce"
           >
             Order Now
           </button>
@@ -97,37 +96,37 @@ export default function HomePage({ onNavigate }: HomePageProps) {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        <h2 className="text-3xl font-bold text-center mb-12 text-yellow-300">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <h2 className="text-3xl font-bold text-center mb-6 text-yellow-300">
           Why Choose Us?
         </h2>
-        <div className="space-y-4">
-          <div className="text-center px-4 py-3 bg-neutral-900/60 rounded-lg border border-yellow-500/30">
-            <div className="bg-yellow-500/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Pizza className="w-8 h-8 text-yellow-400" />
+        <div className="space-y-3">
+          <div className="text-center px-3 py-2">
+            <div className="bg-yellow-500/10 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Pizza className="w-7 h-7 text-yellow-400" />
             </div>
-            <h3 className="text-xl font-bold mb-2 text-yellow-300">Fresh Ingredients</h3>
-            <p className="text-gray-300">
+            <h3 className="text-lg font-bold mb-1 text-yellow-300">Fresh Ingredients</h3>
+            <p className="text-sm text-gray-300">
               We use only the freshest, highest-quality ingredients in every pizza
             </p>
           </div>
 
-          <div className="text-center px-4 py-3 bg-neutral-900/60 rounded-lg border border-yellow-500/30">
-            <div className="bg-yellow-500/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Clock className="w-8 h-8 text-yellow-400" />
+          <div className="text-center px-3 py-2">
+            <div className="bg-yellow-500/10 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Clock className="w-7 h-7 text-yellow-400" />
             </div>
-            <h3 className="text-xl font-bold mb-2 text-yellow-300">Fast Delivery</h3>
-            <p className="text-gray-300">
+            <h3 className="text-lg font-bold mb-1 text-yellow-300">Fast Delivery</h3>
+            <p className="text-sm text-gray-300">
               Hot and fresh pizza delivered to your door in no time
             </p>
           </div>
 
-          <div className="text-center px-4 py-3 bg-neutral-900/60 rounded-lg border border-yellow-500/30">
-            <div className="bg-yellow-500/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Heart className="w-8 h-8 text-yellow-400" />
+          <div className="text-center px-3 py-2">
+            <div className="bg-yellow-500/10 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Heart className="w-7 h-7 text-yellow-400" />
             </div>
-            <h3 className="text-xl font-bold mb-2 text-yellow-300">Made with Love</h3>
-            <p className="text-gray-300">
+            <h3 className="text-lg font-bold mb-1 text-yellow-300">Made with Love</h3>
+            <p className="text-sm text-gray-300">
               Every pizza is crafted with passion and care
             </p>
           </div>
