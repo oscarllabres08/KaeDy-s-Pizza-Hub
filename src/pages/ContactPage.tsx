@@ -1,11 +1,15 @@
 import type { ReactNode } from 'react';
-import { ExternalLink, Mail, Phone, MapPin, Clock, Facebook, MessageCircle } from 'lucide-react';
+import { ExternalLink, Mail, Phone, MapPin, Clock, Facebook } from 'lucide-react';
+import { MessengerBrandIcon } from '../components/MessengerBrandIcon';
+import { SocialContactIcons } from '../components/SocialContactIcons';
+
+const KAEDYS_EMAIL = 'kaedyspizzahub17@gmail.com';
+const GMAIL_COMPOSE = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(KAEDYS_EMAIL)}`;
 
 export default function ContactPage() {
-  // TODO: replace with your business details
   const contact = {
     phone: '09232785464',
-    email: 'kaedyspizzahub@gmail.com',
+    email: KAEDYS_EMAIL,
     facebookUrl: 'https://www.facebook.com/profile.php?id=100089472924463',
     messengerPageId: '100089472924463',
     addressLabel: 'Zone 3, Imperial St., San Isidro (Pob.), Pili, 4418 Camarines Sur',
@@ -31,7 +35,8 @@ export default function ContactPage() {
     {
       title: 'Email',
       value: contact.email,
-      href: `mailto:${contact.email}`,
+      href: GMAIL_COMPOSE,
+      external: true,
       icon: <Mail className="w-5 h-5 text-yellow-300" />,
     },
     {
@@ -46,7 +51,7 @@ export default function ContactPage() {
       value: 'Message us on Messenger',
       href: `https://m.me/${contact.messengerPageId}`,
       external: true,
-      icon: <MessageCircle className="w-5 h-5 text-yellow-300" />,
+      icon: <MessengerBrandIcon className="h-5 w-5 text-yellow-300" />,
     },
     {
       title: 'Address',
@@ -138,51 +143,8 @@ export default function ContactPage() {
             </div>
           </section>
 
-          <section className="bg-neutral-900 rounded-2xl shadow-lg p-5 md:p-8 border border-yellow-500/30">
-            <h2 className="text-xl md:text-2xl font-bold text-yellow-300 mb-5 text-center">
-              Send us a Message
-            </h2>
-            <form className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-200 mb-2">
-                  Name
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-3 border border-gray-700 rounded-lg bg-black text-white focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                  placeholder="Your name"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-200 mb-2">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  className="w-full px-4 py-3 border border-gray-700 rounded-lg bg-black text-white focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                  placeholder="your@email.com"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-200 mb-2">
-                  Message
-                </label>
-                <textarea
-                  rows={5}
-                  className="w-full px-4 py-3 border border-gray-700 rounded-lg bg-black text-white focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                  placeholder="Your message"
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-yellow-400 text-black py-3 rounded-lg font-semibold hover:bg-yellow-300 transition-all shadow-lg active:scale-[0.99]"
-              >
-                Send Message
-              </button>
-            </form>
+          <section className="flex min-h-[140px] items-center justify-center rounded-2xl border border-yellow-500/30 bg-neutral-900 p-6 shadow-lg md:p-10">
+            <SocialContactIcons />
           </section>
         </div>
       </div>

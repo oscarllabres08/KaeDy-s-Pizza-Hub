@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Pizza, Clock, Heart, Megaphone } from 'lucide-react';
+import { SocialContactIcons } from '../components/SocialContactIcons';
 import { supabase, Announcement } from '../lib/supabase';
 
 type HomePageProps = {
@@ -266,6 +267,12 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           </div>
         </div>
       </div>
+
+      <section className="border-t border-yellow-500/20 bg-black/30 px-4 py-10 lg:py-12">
+        <div className="mx-auto max-w-2xl">
+          <SocialContactIcons />
+        </div>
+      </section>
 
       <style>{`
         @keyframes kaedys-marquee-left {
