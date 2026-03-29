@@ -432,74 +432,80 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
               </p>
             </div>
 
-            <div className="bg-neutral-900/80 rounded-2xl shadow-xl p-4 sm:p-6 mb-6 border border-yellow-500/25">
+            <div className="mb-4 rounded-xl border border-yellow-500/25 bg-neutral-900/80 p-3 shadow-lg sm:p-4">
               {buyNowItems.map((item) => (
-                <div key={item.id} className="py-4 border-b border-yellow-500/15 last:border-b-0">
-                  <div className="flex gap-4">
+                <div key={item.id} className="border-b border-yellow-500/10 py-2.5 last:border-b-0 last:pb-0 first:pt-0">
+                  <div className="flex gap-2.5 sm:gap-3">
                     <img
                       src={item.image_url}
                       alt={item.name}
-                      className="w-20 h-20 object-cover rounded-xl shrink-0 border border-yellow-500/15"
+                      className="h-14 w-14 shrink-0 rounded-lg border border-yellow-500/15 object-cover sm:h-16 sm:w-16"
                     />
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-yellow-300 break-words leading-snug">{item.name}</h3>
-                      <p className="text-xs text-gray-400 mt-1">₱{item.price.toFixed(2)} each</p>
-
-                      <div className="mt-3 inline-flex items-center gap-2 bg-black/40 border border-yellow-500/25 rounded-full px-2 py-1">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <h3 className="text-sm font-semibold leading-tight text-yellow-300 line-clamp-2">
+                            {item.name}
+                          </h3>
+                          <p className="mt-0.5 text-[10px] text-gray-500 sm:text-[11px]">
+                            ₱{item.price.toFixed(2)} each
+                          </p>
+                        </div>
+                        <span className="shrink-0 text-sm font-bold tabular-nums text-yellow-300">
+                          ₱{(item.price * item.quantity).toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="mt-1.5 inline-flex h-7 items-center gap-0.5 rounded-full border border-yellow-500/25 bg-black/40 px-1">
                         <button
                           type="button"
                           onClick={() => updateBuyNowQuantity(item.id, item.quantity - 1)}
-                          className="w-8 h-8 inline-flex items-center justify-center rounded-full bg-neutral-900 hover:bg-neutral-800 transition-all"
+                          className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-neutral-900 transition-all hover:bg-neutral-800"
                           aria-label="Decrease quantity"
                         >
-                          <Minus className="w-4 h-4 text-gray-200" />
+                          <Minus className="h-3.5 w-3.5 text-gray-200" />
                         </button>
-                        <span className="font-semibold w-8 text-center text-gray-100">{item.quantity}</span>
+                        <span className="min-w-[1.25rem] text-center text-xs font-semibold text-gray-100">
+                          {item.quantity}
+                        </span>
                         <button
                           type="button"
                           onClick={() => updateBuyNowQuantity(item.id, item.quantity + 1)}
-                          className="w-8 h-8 inline-flex items-center justify-center rounded-full bg-neutral-900 hover:bg-neutral-800 transition-all"
+                          className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-neutral-900 transition-all hover:bg-neutral-800"
                           aria-label="Increase quantity"
                         >
-                          <Plus className="w-4 h-4 text-gray-200" />
+                          <Plus className="h-3.5 w-3.5 text-gray-200" />
                         </button>
                       </div>
                     </div>
-                  </div>
-                  <div className="mt-3 flex items-center justify-between">
-                    <span className="text-xs text-gray-400">Item total</span>
-                    <span className="font-bold text-yellow-300">
-                      ₱{(item.price * item.quantity).toFixed(2)}
-                    </span>
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="bg-neutral-900/80 rounded-xl border border-yellow-500/25 p-3 sm:p-4 shadow-lg">
-              <div className="flex items-center justify-between mb-2">
+            <div className="rounded-xl border border-yellow-500/25 bg-neutral-900/80 p-3 shadow-lg sm:p-4">
+              <div className="mb-2 flex items-center justify-between">
                 <h2 className="text-base font-bold text-yellow-300">Order Summary</h2>
                 <span className="text-[11px] text-gray-400">{buyNowItems.length} item(s)</span>
               </div>
-              <div className="flex justify-between text-base font-bold text-yellow-300 pt-2 border-t border-yellow-500/20">
+              <div className="flex justify-between border-t border-yellow-500/20 pt-2 text-base font-bold text-yellow-300">
                 <span>Total</span>
-                <span className="text-white">₱{buyNowTotal.toFixed(2)}</span>
+                <span className="tabular-nums text-white">₱{buyNowTotal.toFixed(2)}</span>
               </div>
-              <div className="mt-3 flex gap-2">
+              <div className="mt-2 flex gap-2">
                 <button
                   type="button"
                   onClick={() => {
                     clearBuyNow();
                     onNavigate('menu');
                   }}
-                  className="flex-1 inline-flex min-h-[42px] items-center justify-center rounded-lg bg-neutral-800 px-3 py-3 text-sm font-semibold text-gray-200 transition-colors hover:bg-neutral-700 sm:px-4"
+                  className="flex-1 inline-flex items-center justify-center rounded-lg bg-neutral-800 px-2 py-2 text-xs font-semibold text-gray-200 transition-colors hover:bg-neutral-700 sm:px-3 sm:text-sm"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={() => setBuyNowCheckoutStep('details')}
-                  className="flex-1 inline-flex min-h-[42px] items-center justify-center rounded-lg bg-yellow-400 px-3 py-3 text-center text-sm font-semibold leading-normal text-black shadow-md transition-colors hover:bg-yellow-300 sm:px-4"
+                  className="flex-1 inline-flex items-center justify-center rounded-lg bg-yellow-400 px-2 py-2 text-center text-xs font-semibold leading-snug text-black shadow-md transition-colors hover:bg-yellow-300 sm:px-3 sm:text-sm"
                 >
                   Proceed to Checkout
                 </button>
@@ -836,9 +842,9 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
       {modalEl}
       <div className="min-h-screen bg-gradient-to-br from-black to-neutral-900 py-8 px-4">
         <div className="max-w-4xl mx-auto">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-yellow-300">Your Cart</h1>
-            <p className="text-sm text-gray-400 mt-1">Review your items before checkout.</p>
+          <div className="mb-4">
+            <h1 className="text-2xl sm:text-3xl font-bold text-yellow-300">Your Cart</h1>
+            <p className="text-xs text-gray-400 mt-0.5">Review your items before checkout.</p>
           </div>
 
           {isBuyNowFlow && (
@@ -865,93 +871,95 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
             </div>
           )}
 
-        <div className="bg-neutral-900/80 rounded-2xl shadow-xl p-4 sm:p-6 mb-6 border border-yellow-500/25">
+        <div className="mb-4 rounded-xl border border-yellow-500/25 bg-neutral-900/80 p-3 shadow-lg sm:p-4">
           {cart.map((item) => (
             <div
               key={item.id}
-              className="py-4 border-b border-yellow-500/15 last:border-b-0"
+              className="border-b border-yellow-500/10 py-2.5 last:border-b-0 last:pb-0 first:pt-0"
             >
-              <div className="flex gap-4">
+              <div className="flex gap-2.5 sm:gap-3">
                 <img
                   src={item.image_url}
                   alt={item.name}
-                  className="w-20 h-20 object-cover rounded-xl shrink-0 border border-yellow-500/15"
+                  className="h-14 w-14 shrink-0 rounded-lg border border-yellow-500/15 object-cover sm:h-16 sm:w-16"
                 />
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-yellow-300 break-words leading-snug">
-                    {item.name}
-                  </h3>
-                  <p className="text-xs text-gray-400 mt-1">
-                    ₱{item.price.toFixed(2)} each
-                  </p>
-
-                  <div className="mt-3 flex items-center justify-between gap-3">
-                    <div className="inline-flex items-center gap-2 bg-black/40 border border-yellow-500/25 rounded-full px-2 py-1">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-semibold leading-tight text-yellow-300 line-clamp-2">
+                        {item.name}
+                      </h3>
+                      <p className="mt-0.5 text-[10px] text-gray-500 sm:text-[11px]">
+                        ₱{item.price.toFixed(2)} each
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-sm font-bold tabular-nums text-yellow-300">
+                      ₱{(item.price * item.quantity).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="mt-1.5 flex items-center justify-between gap-2">
+                    <div className="inline-flex h-7 items-center gap-0.5 rounded-full border border-yellow-500/25 bg-black/40 px-1">
                       <button
+                        type="button"
                         onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        className="w-8 h-8 inline-flex items-center justify-center rounded-full bg-neutral-900 hover:bg-neutral-800 transition-all"
+                        className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-neutral-900 transition-all hover:bg-neutral-800"
                         aria-label="Decrease quantity"
                       >
-                        <Minus className="w-4 h-4 text-gray-200" />
+                        <Minus className="h-3.5 w-3.5 text-gray-200" />
                       </button>
-                      <span className="font-semibold w-8 text-center text-gray-100">
+                      <span className="min-w-[1.25rem] text-center text-xs font-semibold text-gray-100">
                         {item.quantity}
                       </span>
                       <button
+                        type="button"
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="w-8 h-8 inline-flex items-center justify-center rounded-full bg-neutral-900 hover:bg-neutral-800 transition-all"
+                        className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-neutral-900 transition-all hover:bg-neutral-800"
                         aria-label="Increase quantity"
                       >
-                        <Plus className="w-4 h-4 text-gray-200" />
+                        <Plus className="h-3.5 w-3.5 text-gray-200" />
                       </button>
                     </div>
-
                     <button
+                      type="button"
                       onClick={() => removeFromCart(item.id)}
-                      className="w-10 h-10 inline-flex items-center justify-center rounded-xl bg-red-900/35 hover:bg-red-800/60 border border-red-500/20 transition-all"
+                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-red-500/20 bg-red-900/35 transition-all hover:bg-red-800/60"
                       aria-label="Remove item"
                     >
-                      <Trash2 className="w-4 h-4 text-red-400" />
+                      <Trash2 className="h-3.5 w-3.5 text-red-400" />
                     </button>
                   </div>
                 </div>
-              </div>
-
-              <div className="mt-3 flex items-center justify-between">
-                <span className="text-xs text-gray-400">Item total</span>
-                <span className="font-bold text-yellow-300">
-                  ₱{(item.price * item.quantity).toFixed(2)}
-                </span>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="bg-neutral-900/80 rounded-2xl shadow-xl p-4 sm:p-6 border border-yellow-500/25">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-bold text-yellow-300">Order Summary</h2>
-            <span className="text-xs text-gray-400">{cart.length} item(s)</span>
+        <div className="rounded-xl border border-yellow-500/25 bg-neutral-900/80 p-3 shadow-lg sm:p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-base font-bold text-yellow-300">Order Summary</h2>
+            <span className="text-[11px] text-gray-400">{cart.length} item(s)</span>
           </div>
 
-          <div className="space-y-2 text-sm">
+          <div className="space-y-1.5 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-300">Subtotal</span>
-              <span className="font-semibold text-gray-100">₱{cartTotal.toFixed(2)}</span>
+              <span className="text-xs text-gray-400">Subtotal</span>
+              <span className="text-sm font-semibold tabular-nums text-gray-100">₱{cartTotal.toFixed(2)}</span>
             </div>
             {discountPercent > 0 && (
-              <div className="flex justify-between text-green-400">
+              <div className="flex justify-between text-xs text-green-400 sm:text-sm">
                 <span>Game Discount ({discountPercent.toFixed(0)}%)</span>
-                <span className="font-semibold">-₱{discountAmount.toFixed(2)}</span>
+                <span className="font-semibold tabular-nums">-₱{discountAmount.toFixed(2)}</span>
               </div>
             )}
-            <div className="pt-3 mt-3 border-t border-yellow-500/20 flex justify-between text-lg font-bold">
+            <div className="mt-2 flex justify-between border-t border-yellow-500/20 pt-2 text-base font-bold">
               <span className="text-yellow-300">Total</span>
-              <span className="text-white">₱{finalTotal.toFixed(2)}</span>
+              <span className="tabular-nums text-white">₱{finalTotal.toFixed(2)}</span>
             </div>
           </div>
           <button
+            type="button"
             onClick={() => setShowCheckout(true)}
-            className="w-full mt-5 bg-yellow-400 text-black py-3 rounded-xl font-semibold hover:bg-yellow-300 transition-all shadow-lg"
+            className="mt-4 w-full rounded-lg bg-yellow-400 py-2.5 text-sm font-semibold text-black shadow-md transition-all hover:bg-yellow-300 sm:py-3"
           >
             Proceed to Checkout
           </button>

@@ -12,6 +12,8 @@ export default function ProfilePage() {
   const [orders, setOrders] = useState<OrderWithItems[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
+  const [expandedHistoryOrderIds, setExpandedHistoryOrderIds] = useState<Set<string>>(new Set());
+  const [orderHistorySectionOpen, setOrderHistorySectionOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deletingOrders, setDeletingOrders] = useState(false);
   const [deleteOrdersError, setDeleteOrdersError] = useState<string | null>(null);
@@ -98,12 +100,18 @@ export default function ProfilePage() {
 
       if (error) throw error;
       setOrders(ordersData as OrderWithItems[]);
+      const idSet = new Set((ordersData as OrderWithItems[]).map((o) => o.id));
       setSelectedOrderIds((prev) => {
-        // Remove selections for orders that no longer exist
-        const ids = new Set((ordersData as OrderWithItems[]).map((o) => o.id));
         const next = new Set<string>();
         prev.forEach((id) => {
-          if (ids.has(id)) next.add(id);
+          if (idSet.has(id)) next.add(id);
+        });
+        return next;
+      });
+      setExpandedHistoryOrderIds((prev) => {
+        const next = new Set<string>();
+        prev.forEach((id) => {
+          if (idSet.has(id)) next.add(id);
         });
         return next;
       });
@@ -151,6 +159,15 @@ export default function ProfilePage() {
   const toggleSelectOrder = (orderId: string, status: string) => {
     if (!canDeleteOrder(status)) return;
     setSelectedOrderIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(orderId)) next.delete(orderId);
+      else next.add(orderId);
+      return next;
+    });
+  };
+
+  const toggleHistoryOrderExpanded = (orderId: string) => {
+    setExpandedHistoryOrderIds((prev) => {
       const next = new Set(prev);
       if (next.has(orderId)) next.delete(orderId);
       else next.add(orderId);
@@ -688,12 +705,44 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              <div>
-                <h3 className="text-lg font-bold text-yellow-200 mb-3">Order History</h3>
+              <div className="rounded-xl border border-yellow-500/25 bg-black/25 overflow-hidden">
+                <button
+                  type="button"
+                  id="order-history-section-trigger"
+                  aria-expanded={orderHistorySectionOpen}
+                  aria-controls="order-history-section-panel"
+                  onClick={() => setOrderHistorySectionOpen((o) => !o)}
+                  className="flex w-full items-center justify-between gap-3 p-4 text-left outline-none transition-colors hover:bg-yellow-500/[0.06] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-yellow-400/50"
+                >
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-lg font-bold text-yellow-200">Order History</h3>
+                    <p className="mt-1 text-xs text-gray-500">
+                      {orderHistorySectionOpen
+                        ? 'Tap an order below to show items and payment details.'
+                        : historyOrders.length === 0
+                          ? 'Tap to open — no past orders yet.'
+                          : `${historyOrders.length} past order${historyOrders.length !== 1 ? 's' : ''} — tap to view.`}
+                    </p>
+                  </div>
+                  <ChevronDown
+                    className={`h-6 w-6 shrink-0 text-yellow-400 transition-transform duration-200 ${
+                      orderHistorySectionOpen ? 'rotate-180' : ''
+                    }`}
+                    aria-hidden
+                  />
+                </button>
+
+                {orderHistorySectionOpen ? (
+                  <div
+                    id="order-history-section-panel"
+                    role="region"
+                    aria-labelledby="order-history-section-trigger"
+                    className="border-t border-yellow-500/20 px-4 pb-4 pt-1"
+                  >
                 {historyOrders.length === 0 ? (
-                  <p className="text-sm text-gray-400">No order history yet.</p>
+                  <p className="text-sm text-gray-400 pt-2">No order history yet.</p>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-4 pt-2">
               <div className="flex flex-col gap-3 rounded-xl border border-yellow-500/15 bg-black/30 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-sm text-gray-200">
                   <span className="font-semibold text-yellow-300">{selectedOrderIds.size}</span>{' '}
@@ -726,96 +775,121 @@ export default function ProfilePage() {
                   </button>
                 </div>
               </div>
-              {historyOrders.map((order) => (
-                <div key={order.id} className="relative">
-                <div
-                  className="border border-yellow-500/20 rounded-lg p-4 hover:shadow-md transition-all bg-black/40"
-                >
-                  <div className="flex justify-between items-start mb-3 gap-3">
-                    <div>
-                      <div className="flex items-center gap-2">
+              {historyOrders.map((order) => {
+                const historyExpanded = expandedHistoryOrderIds.has(order.id);
+                const headerId = `order-history-header-${order.id}`;
+                const panelId = `order-history-panel-${order.id}`;
+                return (
+                  <div key={order.id} className="relative">
+                    <div className="overflow-hidden rounded-lg border border-yellow-500/20 bg-black/40 transition-all hover:shadow-md">
+                      <div className="flex items-start gap-2 p-4">
                         <input
                           type="checkbox"
                           checked={selectedOrderIds.has(order.id)}
                           disabled={!canDeleteOrder(order.status)}
                           onChange={() => toggleSelectOrder(order.id, order.status)}
-                          className="h-4 w-4 accent-yellow-400 disabled:opacity-40"
+                          className="mt-1 h-4 w-4 shrink-0 accent-yellow-400 disabled:opacity-40"
                           aria-label={`Select order ${order.id.slice(0, 8)} for deletion`}
                         />
-                      <p className="text-sm text-gray-300">
-                        Order #{order.id.slice(0, 8)}
-                      </p>
+                        <button
+                          type="button"
+                          id={headerId}
+                          aria-expanded={historyExpanded}
+                          aria-controls={panelId}
+                          onClick={() => toggleHistoryOrderExpanded(order.id)}
+                          className="flex min-w-0 flex-1 items-start gap-2 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-yellow-400/60"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm text-gray-300">Order #{order.id.slice(0, 8)}</p>
+                            <p className="text-xs text-gray-500">
+                              {new Date(order.created_at).toLocaleDateString()} at{' '}
+                              {new Date(order.created_at).toLocaleTimeString()}
+                            </p>
+                          </div>
+                          <ChevronDown
+                            className={`mt-0.5 h-5 w-5 shrink-0 text-yellow-400 transition-transform duration-200 ${
+                              historyExpanded ? 'rotate-180' : ''
+                            }`}
+                            aria-hidden
+                          />
+                        </button>
+                        <div className="flex shrink-0 items-start gap-2">
+                          <span
+                            className={`px-3 py-1 rounded text-xs font-semibold ${getStatusColor(
+                              order.status
+                            )}`}
+                          >
+                            {getStatusText(order.status)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => openDeleteConfirmForSingle(order.id, order.status)}
+                            disabled={!canDeleteOrder(order.status)}
+                            className="p-2 rounded-md border border-red-500/25 text-red-300 hover:bg-red-500/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            aria-label="Delete order"
+                            title={
+                              canDeleteOrder(order.status)
+                                ? 'Delete order'
+                                : 'Only completed/cancelled orders can be deleted'
+                            }
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
-                      <p className="text-xs text-gray-500">
-                        {new Date(order.created_at).toLocaleDateString()} at{' '}
-                        {new Date(order.created_at).toLocaleTimeString()}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`px-3 py-1 rounded text-xs font-semibold ${getStatusColor(
-                          order.status
-                        )}`}
-                      >
-                        {getStatusText(order.status)}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => openDeleteConfirmForSingle(order.id, order.status)}
-                        disabled={!canDeleteOrder(order.status)}
-                        className="p-2 rounded-md border border-red-500/25 text-red-300 hover:bg-red-500/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                        aria-label="Delete order"
-                        title={
-                          canDeleteOrder(order.status)
-                            ? 'Delete order'
-                            : 'Only completed/cancelled orders can be deleted'
-                        }
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
 
-                  <div className="mb-3">
-                    {order.order_items.map((item) => (
-                      <p key={item.id} className="text-sm text-gray-200">
-                        {item.quantity}x {item.menu_item_name} - ₱
-                        {item.subtotal.toFixed(2)}
-                      </p>
-                    ))}
-                  </div>
+                      {historyExpanded ? (
+                        <div
+                          id={panelId}
+                          role="region"
+                          aria-labelledby={headerId}
+                          className="border-t border-yellow-500/20 px-4 pb-4 pt-3"
+                        >
+                          <div className="mb-3">
+                            {order.order_items.map((item) => (
+                              <p key={item.id} className="text-sm text-gray-200">
+                                {item.quantity}x {item.menu_item_name} - ₱
+                                {item.subtotal.toFixed(2)}
+                              </p>
+                            ))}
+                          </div>
 
-                  <div className="border-t border-yellow-500/20 pt-3">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-300">Subtotal:</span>
-                      <span className="font-semibold text-yellow-300">
-                        ₱{order.total_amount.toFixed(2)}
-                      </span>
-                    </div>
-                    {order.discount_amount > 0 && (
-                      <div className="flex justify-between text-sm text-green-400">
-                        <span>Discount:</span>
-                        <span className="font-semibold">
-                          -₱{order.discount_amount.toFixed(2)}
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex justify-between text-lg font-bold mt-2 text-yellow-300">
-                      <span>Total:</span>
-                      <span className="text-white">₱{order.final_amount.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm mt-2">
-                      <span className="text-gray-300">Payment:</span>
-                      <span className="font-semibold text-gray-100">
-                        {order.payment_method}
-                      </span>
+                          <div className="border-t border-yellow-500/20 pt-3">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-300">Subtotal:</span>
+                              <span className="font-semibold text-yellow-300">
+                                ₱{order.total_amount.toFixed(2)}
+                              </span>
+                            </div>
+                            {order.discount_amount > 0 && (
+                              <div className="flex justify-between text-sm text-green-400">
+                                <span>Discount:</span>
+                                <span className="font-semibold">
+                                  -₱{order.discount_amount.toFixed(2)}
+                                </span>
+                              </div>
+                            )}
+                            <div className="flex justify-between text-lg font-bold mt-2 text-yellow-300">
+                              <span>Total:</span>
+                              <span className="text-white">₱{order.final_amount.toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between text-sm mt-2">
+                              <span className="text-gray-300">Payment:</span>
+                              <span className="font-semibold text-gray-100">
+                                {order.payment_method}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
                   </div>
-                </div>
-                </div>
-              ))}
+                );
+              })}
                   </div>
                 )}
+                  </div>
+                ) : null}
               </div>
             </div>
           )}
