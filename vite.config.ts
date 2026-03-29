@@ -11,20 +11,8 @@ export default defineConfig({
     exclude: ['lucide-react'],
   },
   build: {
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (!id.includes('node_modules')) return;
-          if (id.includes('node_modules/react-dom/') || id.includes('node_modules/react/')) {
-            return 'react-vendor';
-          }
-          if (id.includes('@supabase')) {
-            return 'supabase-vendor';
-          }
-          return 'vendor';
-        },
-      },
-    },
+    // Avoid custom manualChunks for React — splitting react vs other vendors often causes
+    // "Cannot read properties of undefined (reading 'forwardRef')" in production.
     chunkSizeWarningLimit: 600,
   },
 });
