@@ -2,9 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Heart, Volume2, VolumeX, X } from 'lucide-react';
 import {
   fetchVideoReelCounts,
-  hasUserLikedReel,
+  fetchUserLikedReelIds,
   heartVideoReel,
+  unheartVideoReel,
 } from '../lib/videoReelHearts';
+import { useAuth } from '../contexts/AuthContext';
 
 export type ReelItem = {
   id: string;
@@ -38,11 +40,14 @@ function formatHeartCount(n: number): string {
 
 type HomeReelsSectionProps = {
   className?: string;
+  /** Redirect dito (hal. `auth`) kapag gustong mag-heart ang hindi naka-log in */
+  onNavigate: (page: string) => void;
 };
 
 type ReelMediaState = 'loading' | 'ready' | 'error';
 
-export function HomeReelsSection({ className = '' }: HomeReelsSectionProps) {
+export function HomeReelsSection({ className = '', onNavigate }: HomeReelsSectionProps) {
+  const { user } = useAuth();
   const scrollRef = useRef<HTMLDivElement>(null);
   const slideRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
@@ -52,7 +57,7 @@ export function HomeReelsSection({ className = '' }: HomeReelsSectionProps) {
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [likedMap, setLikedMap] = useState<Record<string, boolean>>(() => {
     const m: Record<string, boolean> = {};
-    for (const v of REEL_VIDEOS) m[v.id] = hasUserLikedReel(v.id);
+    for (const v of REEL_VIDEOS) m[v.id] = false;
     return m;
   });
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -69,6 +74,19 @@ export function HomeReelsSection({ className = '' }: HomeReelsSectionProps) {
     const ids = REEL_VIDEOS.map((v) => v.id);
     fetchVideoReelCounts(ids).then(setCounts);
   }, []);
+
+  useEffect(() => {
+    const ids = REEL_VIDEOS.map((v) => v.id);
+    if (!user) {
+      setLikedMap(() => {
+        const m: Record<string, boolean> = {};
+        for (const id of ids) m[id] = false;
+        return m;
+      });
+      return;
+    }
+    fetchUserLikedReelIds(ids).then(setLikedMap);
+  }, [user]);
 
   const setReelState = useCallback((id: string, s: ReelMediaState) => {
     setMediaState((prev) => ({ ...prev, [id]: s }));
@@ -214,10 +232,19 @@ export function HomeReelsSection({ className = '' }: HomeReelsSectionProps) {
 
   const onHeart = async (videoId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (likedMap[videoId]) return;
-    const res = await heartVideoReel(videoId);
-    if (!res.ok) return;
-    setLikedMap((m) => ({ ...m, [videoId]: true }));
+    if (!user) {
+      onNavigate('auth');
+      return;
+    }
+    const removing = Boolean(likedMap[videoId]);
+    const res = removing ? await unheartVideoReel(videoId) : await heartVideoReel(videoId);
+    if (!res.ok) {
+      const ids = REEL_VIDEOS.map((v) => v.id);
+      fetchUserLikedReelIds(ids).then(setLikedMap);
+      fetchVideoReelCounts(ids).then(setCounts);
+      return;
+    }
+    setLikedMap((m) => ({ ...m, [videoId]: !removing }));
     if (res.counts) {
       setCounts((prev) => {
         const next = { ...prev };
@@ -309,7 +336,7 @@ export function HomeReelsSection({ className = '' }: HomeReelsSectionProps) {
         >
           {REEL_VIDEOS.map((item, reelIndex) => {
             const count = counts[item.id] ?? 0;
-            const liked = !!likedMap[item.id];
+            const liked = Boolean(user && likedMap[item.id]);
             const state = mediaState[item.id] ?? 'loading';
             const soundOn = !!audioEnabled[item.id];
             const isActiveReel = reelIndex === activeIndex;
@@ -387,9 +414,18 @@ export function HomeReelsSection({ className = '' }: HomeReelsSectionProps) {
                   <button
                     type="button"
                     onClick={(e) => onHeart(item.id, e)}
-                    className="flex flex-col items-center gap-0.5 rounded-md border-0 bg-transparent p-0.5 shadow-none transition-transform hover:scale-105 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black/50"
+                    className={`flex flex-col items-center gap-0.5 rounded-md border-0 bg-transparent p-0.5 shadow-none transition-transform hover:scale-105 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black/50 ${
+                      !user ? 'opacity-90' : ''
+                    }`}
                     aria-pressed={liked}
-                    aria-label={liked ? 'Liked' : 'Like video'}
+                    aria-label={
+                      !user
+                        ? 'Mag-sign in para mag-like'
+                        : liked
+                          ? 'Alisin ang like'
+                          : 'Like video'
+                    }
+                    title={!user ? 'Mag-sign in para mag-like' : liked ? 'Tap para alisin ang like' : 'Like'}
                   >
                     <Heart
                       className={`w-6 h-6 transition-[filter,transform] ${

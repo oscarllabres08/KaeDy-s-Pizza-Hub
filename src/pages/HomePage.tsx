@@ -245,7 +245,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             </div>
           </div>
 
-          <HomeReelsSection className="mt-7" />
+          <HomeReelsSection className="mt-7" onNavigate={onNavigate} />
 
           {/* Our story */}
           <div className="mt-7">
@@ -418,7 +418,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
         )}
 
         <div className="max-w-7xl mx-auto px-4 py-8">
-          <HomeReelsSection />
+          <HomeReelsSection onNavigate={onNavigate} />
         </div>
 
         <div className="max-w-7xl mx-auto px-4 py-8">
