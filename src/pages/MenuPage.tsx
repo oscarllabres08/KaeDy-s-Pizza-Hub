@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Search, X } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useBuyNow } from '../contexts/BuyNowContext';
@@ -14,6 +15,8 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
   const [addedItems, setAddedItems] = useState<Set<string>>(new Set());
   const [previewItem, setPreviewItem] = useState<MenuItem | null>(null);
   const [search, setSearch] = useState('');
+  const [searchExpanded, setSearchExpanded] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const { addToCart } = useCart();
   const { user } = useAuth();
   const { startBuyNow } = useBuyNow();
@@ -87,6 +90,24 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
     setSelectedSubcategory('All');
   }, [selectedCategory]);
 
+  useEffect(() => {
+    if (!searchExpanded) return;
+    const id = window.setTimeout(() => searchInputRef.current?.focus(), 50);
+    return () => window.clearTimeout(id);
+  }, [searchExpanded]);
+
+  useEffect(() => {
+    if (!searchExpanded) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSearchExpanded(false);
+        setSearch('');
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [searchExpanded]);
+
   const filteredItems = menuItems.filter((item) => {
     const mainCategory = getMainCategoryLabel(item);
     const itemSubcategory = item.subcategory?.trim() || '';
@@ -146,20 +167,59 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black to-neutral-900 py-8 px-4">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12 animate-fadeIn text-yellow-300">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Our Menu
+        <div className="flex items-center gap-3 mb-6 animate-fadeIn">
+          <h1 className="text-2xl md:text-3xl font-bold text-yellow-300 shrink-0 tracking-tight">
+            Menu
           </h1>
-        </div>
-
-        <div className="mb-4">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search for pizza, meals, or drinks..."
-            className="w-full px-4 py-3 rounded-lg bg-neutral-900 border border-yellow-500/40 text-gray-100 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-          />
+          <div className="flex-1 flex justify-end min-w-0">
+            <div
+              className={[
+                'flex items-center h-12 w-full overflow-hidden border border-yellow-500/40 bg-neutral-900/95 backdrop-blur-sm shadow-[0_4px_24px_rgba(0,0,0,0.35)] transition-[max-width,border-radius,box-shadow] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
+                searchExpanded
+                  ? 'max-w-lg rounded-xl pl-3 pr-2 ring-1 ring-yellow-400/25 shadow-[0_8px_32px_rgba(234,179,8,0.08)]'
+                  : 'max-w-[3rem] rounded-full justify-center hover:bg-neutral-800/80 hover:border-yellow-400/55 active:scale-[0.97]',
+              ].join(' ')}
+            >
+              {searchExpanded ? (
+                <>
+                  <Search
+                    className="w-5 h-5 text-yellow-400 shrink-0 mr-2"
+                    aria-hidden
+                  />
+                  <input
+                    ref={searchInputRef}
+                    type="search"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search for pizza, meals, or drinks..."
+                    className="flex-1 min-w-0 bg-transparent text-gray-100 placeholder:text-gray-500 text-sm py-2 focus:outline-none"
+                    aria-label="Search menu"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchExpanded(false);
+                      setSearch('');
+                    }}
+                    className="shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-yellow-300 hover:bg-white/5 transition-colors"
+                    aria-label="Close search"
+                  >
+                    <X className="w-5 h-5" strokeWidth={2.25} />
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setSearchExpanded(true)}
+                  className="w-full h-full flex items-center justify-center text-yellow-400 hover:text-yellow-300 transition-colors"
+                  aria-expanded={false}
+                  aria-label="Open search"
+                >
+                  <Search className="w-5 h-5" strokeWidth={2.25} />
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="mb-6 overflow-x-auto">

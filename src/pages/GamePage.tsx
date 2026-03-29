@@ -84,6 +84,36 @@ function makeChoices(correct: number): number[] {
   return shuffle(Array.from(choices));
 }
 
+/** Warm yellow “radiant” layers + soft glows (replaces flat black). */
+function GameRadiantBackdrop() {
+  return (
+    <>
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_130%_95%_at_50%_-20%,rgba(250,204,21,0.45),rgba(251,191,36,0.14)_40%,transparent_65%)]"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_100%_85%_at_105%_12%,rgba(253,224,71,0.24),transparent_52%)]"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_75%_at_-8%_88%,rgba(146,64,14,0.2),transparent_58%)]"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-amber-950/35 via-stone-950/80 to-black"
+        aria-hidden
+      />
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+        <div className="absolute -right-10 -top-28 h-[22rem] w-[22rem] rounded-full bg-yellow-400/28 blur-3xl" />
+        <div className="absolute -left-20 top-[15%] h-[18rem] w-[18rem] rounded-full bg-amber-500/26 blur-3xl" />
+        <div className="absolute bottom-0 left-1/2 h-56 w-[135%] max-w-5xl -translate-x-1/2 rounded-[100%] bg-amber-400/18 blur-3xl" />
+        <div className="absolute bottom-20 right-6 h-44 w-44 rounded-full bg-yellow-300/16 blur-2xl" />
+      </div>
+    </>
+  );
+}
+
 export default function GamePage({ onNavigate }: GamePageProps) {
   const { user } = useAuth();
   const [gameEnabled, setGameEnabled] = useState(true);
@@ -108,10 +138,10 @@ export default function GamePage({ onNavigate }: GamePageProps) {
 
   const accentChoices = useMemo(
     () => [
-      'from-sky-500/25 to-sky-500/5 border-sky-400/25 hover:border-sky-300/40',
-      'from-fuchsia-500/25 to-fuchsia-500/5 border-fuchsia-400/25 hover:border-fuchsia-300/40',
-      'from-emerald-500/25 to-emerald-500/5 border-emerald-400/25 hover:border-emerald-300/40',
-      'from-amber-500/25 to-amber-500/5 border-amber-400/25 hover:border-amber-300/40',
+      'from-amber-500/45 to-amber-800/20 border-amber-400/50 hover:border-yellow-300/70 hover:shadow-lg hover:shadow-amber-500/30',
+      'from-yellow-500/35 to-yellow-800/20 border-yellow-500/45 hover:border-yellow-300/70 hover:shadow-lg hover:shadow-yellow-500/25',
+      'from-orange-500/40 to-orange-900/20 border-orange-400/45 hover:border-orange-300/70 hover:shadow-lg hover:shadow-orange-500/25',
+      'from-neutral-700/50 to-neutral-900/30 border-yellow-500/35 hover:border-yellow-400/55 hover:shadow-lg hover:shadow-black/40',
     ],
     []
   );
@@ -295,13 +325,18 @@ export default function GamePage({ onNavigate }: GamePageProps) {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black to-neutral-900 py-16 px-4 flex items-center justify-center">
-        <div className="text-center">
-          <Calculator className="w-24 h-24 text-yellow-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-yellow-300 mb-4">Please sign in to play</h2>
+      <div className="relative min-h-screen overflow-hidden bg-[#070604] py-16 px-4 flex items-center justify-center">
+        <GameRadiantBackdrop />
+        <div className="text-center relative z-[1]">
+          <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-amber-500/25 to-yellow-600/15 border border-yellow-500/30 shadow-lg shadow-amber-900/40">
+            <Calculator className="w-12 h-12 text-yellow-300" />
+          </div>
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-yellow-200 to-amber-300 bg-clip-text text-transparent mb-4">
+            Please sign in to play
+          </h2>
           <button
             onClick={() => onNavigate('auth')}
-            className="bg-yellow-400 text-black px-8 py-3 rounded-lg font-semibold hover:bg-yellow-300 transition-all"
+            className="rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-black px-8 py-3 font-bold hover:from-amber-300 hover:to-orange-400 transition-all shadow-lg shadow-amber-500/25"
           >
             Sign In
           </button>
@@ -312,21 +347,21 @@ export default function GamePage({ onNavigate }: GamePageProps) {
 
   if (!gameEnabled) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black to-neutral-900 py-16 px-4 flex items-center justify-center">
-        <div className="text-center">
-          <Calculator className="w-24 h-24 text-yellow-900 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-yellow-300 mb-4">
-            Game is currently disabled
-          </h2>
-          <p className="text-gray-400">Check back later!</p>
+      <div className="relative min-h-screen overflow-hidden bg-[#070604] py-16 px-4 flex items-center justify-center">
+        <GameRadiantBackdrop />
+        <div className="text-center relative z-[1]">
+          <Calculator className="w-24 h-24 text-yellow-500/35 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-yellow-200/90 mb-4">Game is currently disabled</h2>
+          <p className="text-neutral-400">Check back later!</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-neutral-950 to-neutral-900 py-10 px-4">
-      <div className="relative max-w-xl mx-auto">
+    <div className="relative min-h-screen overflow-hidden bg-[#070604] py-10 px-4">
+      <GameRadiantBackdrop />
+      <div className="relative z-[1] max-w-xl mx-auto">
         <style>{`
           @keyframes shake {
             0%, 100% { transform: translateX(0); }
@@ -335,60 +370,67 @@ export default function GamePage({ onNavigate }: GamePageProps) {
             60% { transform: translateX(-4px); }
             80% { transform: translateX(4px); }
           }
+          @keyframes floaty {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+          }
         `}</style>
 
         <div className="text-center mb-6 animate-fadeIn">
-          <div className="inline-flex items-center gap-2 rounded-full border border-yellow-500/20 bg-black/40 px-4 py-2 mb-4">
-            <Calculator className="w-4 h-4 text-yellow-400" />
-            <span className="text-xs font-extrabold tracking-wide text-yellow-200">
+          <div className="inline-flex items-center gap-2 rounded-full border border-yellow-500/35 bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-600/15 px-4 py-2 mb-4 shadow-lg shadow-black/40">
+            <Calculator className="w-4 h-4 text-yellow-300" />
+            <span className="text-xs font-extrabold tracking-wide bg-gradient-to-r from-yellow-200 to-amber-300 bg-clip-text text-transparent">
               MULTIPLICATION CHALLENGE
             </span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-black text-yellow-300 mb-2 tracking-tight">
+          <h1 className="text-3xl md:text-4xl font-black mb-2 tracking-tight bg-gradient-to-r from-yellow-300 via-amber-200 to-yellow-400 bg-clip-text text-transparent drop-shadow-sm">
             Math Challenge
           </h1>
-          <p className="text-sm md:text-base text-gray-300 leading-relaxed">
+          <p className="text-sm md:text-base text-gray-200/90 leading-relaxed">
             Answer as many multiplication questions as you can in{' '}
-            <span className="text-yellow-200 font-bold">{GAME_SECONDS}</span> seconds.
+            <span className="text-amber-300 font-bold">{GAME_SECONDS}</span> seconds.
           </p>
         </div>
 
-        <div className="bg-neutral-900/70 backdrop-blur rounded-3xl border border-yellow-500/20 shadow-[0_20px_60px_rgba(0,0,0,0.55)] p-6 md:p-8">
+        <div className="rounded-3xl border border-yellow-500/20 bg-neutral-900/80 backdrop-blur-xl p-6 md:p-8 shadow-[0_0_50px_-12px_rgba(234,179,8,0.12),0_25px_60px_rgba(0,0,0,0.55)] ring-1 ring-yellow-500/15">
           {phase === 'start' && (
             <div className="text-center">
-              <div className="mx-auto mb-6 w-20 h-20 rounded-3xl bg-gradient-to-br from-yellow-500/20 to-yellow-500/5 border border-yellow-500/25 flex items-center justify-center shadow-inner">
-                <Calculator className="w-10 h-10 text-yellow-300" />
+              <div
+                className="mx-auto mb-6 w-20 h-20 rounded-3xl bg-gradient-to-br from-amber-500/25 to-yellow-600/20 border border-yellow-500/25 flex items-center justify-center shadow-inner shadow-amber-900/30"
+                style={{ animation: 'floaty 3s ease-in-out infinite' }}
+              >
+                <Calculator className="w-10 h-10 text-amber-200" />
               </div>
-              <h2 className="text-2xl font-black text-yellow-300 mb-2 tracking-tight">
+              <h2 className="text-2xl font-black mb-2 tracking-tight bg-gradient-to-r from-yellow-200 to-amber-300 bg-clip-text text-transparent">
                 Choose difficulty
               </h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <button
                   onClick={() => chooseDifficulty('easy')}
-                  className="group rounded-2xl border border-yellow-500/20 bg-gradient-to-b from-black/40 to-black/25 px-5 py-5 text-left hover:border-yellow-400/35 hover:from-black/50 hover:to-black/30 transition-all active:scale-[0.99] shadow-sm"
+                  className="group rounded-2xl border-2 border-emerald-400/40 bg-gradient-to-br from-emerald-500/20 via-teal-500/10 to-black/50 px-5 py-5 text-left shadow-md shadow-emerald-500/10 hover:border-emerald-300/70 hover:shadow-emerald-400/25 hover:shadow-lg transition-all active:scale-[0.99]"
                 >
                   <div className="flex items-center justify-between">
-                    <p className="text-yellow-300 font-black text-lg">Easy</p>
-                    <span className="text-[11px] font-extrabold text-yellow-200/80 border border-yellow-500/20 bg-yellow-500/10 rounded-full px-2 py-0.5">
+                    <p className="text-emerald-200 font-black text-lg drop-shadow-sm">Easy</p>
+                    <span className="text-[11px] font-extrabold text-emerald-100 border border-emerald-400/40 bg-emerald-500/25 rounded-full px-2 py-0.5">
                       +1 / correct
                     </span>
                   </div>
-                  <p className="text-gray-300 text-sm mt-2">1-digit × 1-digit</p>
-                  <p className="text-gray-400 text-xs mt-1">Example: 3 × 9</p>
+                  <p className="text-emerald-100/80 text-sm mt-2">1-digit × 1-digit</p>
+                  <p className="text-teal-300/70 text-xs mt-1">Example: 3 × 9</p>
                 </button>
                 <button
                   onClick={() => chooseDifficulty('medium')}
-                  className="group rounded-2xl border border-yellow-500/20 bg-gradient-to-b from-black/40 to-black/25 px-5 py-5 text-left hover:border-yellow-400/35 hover:from-black/50 hover:to-black/30 transition-all active:scale-[0.99] shadow-sm"
+                  className="group rounded-2xl border-2 border-amber-500/45 bg-gradient-to-br from-amber-600/20 via-yellow-600/10 to-black/50 px-5 py-5 text-left shadow-md shadow-amber-900/20 hover:border-yellow-400/60 hover:shadow-amber-500/20 hover:shadow-lg transition-all active:scale-[0.99]"
                 >
                   <div className="flex items-center justify-between">
-                    <p className="text-yellow-300 font-black text-lg">Medium</p>
-                    <span className="text-[11px] font-extrabold text-yellow-200/80 border border-yellow-500/20 bg-yellow-500/10 rounded-full px-2 py-0.5">
+                    <p className="text-amber-100 font-black text-lg drop-shadow-sm">Medium</p>
+                    <span className="text-[11px] font-extrabold text-yellow-100 border border-yellow-500/45 bg-amber-600/30 rounded-full px-2 py-0.5">
                       +2 / correct
                     </span>
                   </div>
-                  <p className="text-gray-300 text-sm mt-2">2-digit × 1-digit</p>
-                  <p className="text-gray-400 text-xs mt-1">Example: 12 × 4</p>
+                  <p className="text-amber-100/90 text-sm mt-2">2-digit × 1-digit</p>
+                  <p className="text-yellow-300/80 text-xs mt-1">Example: 12 × 4</p>
                 </button>
               </div>
             </div>
@@ -396,39 +438,45 @@ export default function GamePage({ onNavigate }: GamePageProps) {
 
           {phase === 'ready' && (
             <div className="text-center">
-              <div className="mx-auto mb-6 w-20 h-20 rounded-3xl bg-gradient-to-br from-yellow-500/20 to-yellow-500/5 border border-yellow-500/25 flex items-center justify-center shadow-inner">
-                <Timer className="w-10 h-10 text-yellow-300" />
+              <div className="mx-auto mb-6 w-20 h-20 rounded-3xl bg-gradient-to-br from-orange-400/30 to-rose-500/25 border border-orange-400/30 flex items-center justify-center shadow-lg shadow-orange-500/20">
+                <Timer className="w-10 h-10 text-orange-200" />
               </div>
-              <h2 className="text-2xl md:text-3xl font-black text-yellow-300 mb-2 tracking-tight">
+              <h2 className="text-2xl md:text-3xl font-black mb-2 tracking-tight bg-gradient-to-r from-orange-300 to-rose-300 bg-clip-text text-transparent">
                 Get ready!
               </h2>
-              <p className="text-sm text-gray-300 mb-6 leading-relaxed">
+              <p className="text-sm text-gray-200 mb-6 leading-relaxed">
                 Difficulty{' '}
-                <span className="text-yellow-200 font-extrabold">{difficulty.toUpperCase()}</span>
+                <span
+                  className={`font-extrabold ${
+                    difficulty === 'easy' ? 'text-emerald-300' : 'text-amber-300'
+                  }`}
+                >
+                  {difficulty.toUpperCase()}
+                </span>
                 . You have{' '}
-                <span className="text-yellow-200 font-extrabold">{GAME_SECONDS}s</span>.
+                <span className="text-yellow-300 font-extrabold">{GAME_SECONDS}s</span>.
               </p>
 
-              <div className="rounded-2xl border border-yellow-500/20 bg-black/35 p-5 text-left max-w-md mx-auto">
-                <p className="text-gray-200 font-extrabold mb-3">How it works</p>
-                <div className="grid gap-2 text-sm text-gray-300">
+              <div className="rounded-2xl border border-yellow-500/25 bg-gradient-to-br from-neutral-950/80 to-amber-950/25 p-5 text-left max-w-md mx-auto">
+                <p className="text-yellow-200 font-extrabold mb-3">How it works</p>
+                <div className="grid gap-2 text-sm text-gray-200">
                   <div className="flex items-start gap-2">
-                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-yellow-400/80 shrink-0" />
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
                     <span>Multiplication only</span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-yellow-400/80 shrink-0" />
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0 shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
                     <span>4 multiple-choice answers</span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-yellow-400/80 shrink-0" />
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-yellow-400 shrink-0 shadow-[0_0_8px_rgba(250,204,21,0.7)]" />
                     <span>Correct = next question instantly</span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-yellow-400/80 shrink-0" />
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0 shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
                     <span>
-                      Score: Easy <span className="text-yellow-200 font-bold">+1</span>, Medium{' '}
-                      <span className="text-yellow-200 font-bold">+2</span>
+                      Score: Easy <span className="text-emerald-300 font-bold">+1</span>, Medium{' '}
+                      <span className="text-amber-300 font-bold">+2</span>
                     </span>
                   </div>
                 </div>
@@ -437,13 +485,13 @@ export default function GamePage({ onNavigate }: GamePageProps) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-7">
                 <button
                   onClick={startGame}
-                  className="rounded-2xl bg-yellow-400 text-black px-5 py-3.5 font-black hover:bg-yellow-300 transition-all active:scale-[0.99] shadow-lg shadow-yellow-500/10"
+                  className="rounded-2xl bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 text-black px-5 py-3.5 font-black hover:from-amber-300 hover:via-orange-400 hover:to-rose-400 transition-all active:scale-[0.99] shadow-lg shadow-orange-500/30"
                 >
                   Start Game
                 </button>
                 <button
                   onClick={() => setPhase('start')}
-                  className="rounded-2xl border border-yellow-500/25 bg-black/40 px-5 py-3.5 font-black text-yellow-200 hover:bg-black/55 transition-all active:scale-[0.99]"
+                  className="rounded-2xl border-2 border-yellow-500/35 bg-neutral-900/80 px-5 py-3.5 font-black text-yellow-200 hover:bg-neutral-800/90 transition-all active:scale-[0.99]"
                 >
                   Back
                 </button>
@@ -455,53 +503,55 @@ export default function GamePage({ onNavigate }: GamePageProps) {
             <div>
               {/* Timer progress */}
               <div className="mb-5">
-                <div className="h-2 rounded-full bg-black/35 border border-yellow-500/15 overflow-hidden">
+                <div className="h-2.5 rounded-full bg-black/40 border border-white/10 overflow-hidden shadow-inner">
                   <div
-                    className="h-full bg-gradient-to-r from-emerald-400 via-yellow-400 to-red-400 transition-[width] duration-500"
+                    className="h-full bg-gradient-to-r from-emerald-400 via-amber-300 to-rose-500 transition-[width] duration-500 shadow-[0_0_12px_rgba(251,191,36,0.5)]"
                     style={{ width: `${timePct}%` }}
                   />
                 </div>
               </div>
 
               <div className="flex items-center justify-between gap-3 mb-5">
-                <div className="flex items-center gap-2 rounded-full border border-yellow-500/20 bg-black/40 px-3.5 py-2.5">
-                  <Timer className="w-4 h-4 text-yellow-400" />
-                  <span className="text-sm font-black text-yellow-200 tabular-nums">
-                    {timeLeft}s
-                  </span>
+                <div className="flex items-center gap-2 rounded-full border border-yellow-500/30 bg-gradient-to-r from-neutral-950/80 to-amber-950/40 px-3.5 py-2.5 shadow-md shadow-black/30">
+                  <Timer className="w-4 h-4 text-yellow-300" />
+                  <span className="text-sm font-black text-yellow-100 tabular-nums">{timeLeft}s</span>
                 </div>
-                <div className="flex items-center gap-2 rounded-full border border-yellow-500/20 bg-black/40 px-3.5 py-2.5">
-                  <Trophy className="w-4 h-4 text-yellow-400" />
-                  <span className="text-sm font-black text-yellow-200 tabular-nums">
-                    {score} pts
-                  </span>
+                <div className="flex items-center gap-2 rounded-full border border-amber-400/30 bg-gradient-to-r from-amber-950/50 to-orange-950/40 px-3.5 py-2.5 shadow-md shadow-amber-500/15">
+                  <Trophy className="w-4 h-4 text-amber-300" />
+                  <span className="text-sm font-black text-amber-100 tabular-nums">{score} pts</span>
                 </div>
               </div>
 
               <div
-                className={`rounded-3xl border border-yellow-500/20 bg-gradient-to-b from-black/40 to-black/25 p-6 text-center shadow-sm ${
-                  lastPick && !lastPick.correct ? 'animate-[shake_300ms_ease-in-out_1]' : ''
+                className={`rounded-3xl border-2 border-yellow-500/30 bg-gradient-to-b from-neutral-950/90 via-neutral-950 to-amber-950/25 p-6 text-center shadow-lg shadow-black/40 ${
+                  lastPick && !lastPick.correct ? 'animate-[shake_300ms_ease-in-out_1] border-red-400/40' : ''
                 }`}
               >
-                <p className="text-gray-300 text-xs sm:text-sm mb-3">
+                <p className="text-gray-200 text-xs sm:text-sm mb-3">
                   Difficulty{' '}
-                  <span className="text-yellow-300 font-black">{difficulty.toUpperCase()}</span>
+                  <span
+                    className={`font-black ${
+                      difficulty === 'easy' ? 'text-emerald-300' : 'text-amber-300'
+                    }`}
+                  >
+                    {difficulty.toUpperCase()}
+                  </span>
                   <span className="text-gray-500"> · </span>
-                  <span className="text-gray-300">
-                    +<span className="text-yellow-200 font-black">{difficultyPoints}</span> per correct
+                  <span className="text-gray-200">
+                    +<span className="text-amber-300 font-black">{difficultyPoints}</span> per correct
                   </span>
                 </p>
-                <p className="text-4xl md:text-6xl font-black text-white tracking-tight">
-                  {question.a}{' '}
-                  <span className="text-yellow-300">×</span>{' '}
-                  {question.b}{' '}
-                  <span className="text-gray-400">= ?</span>
+                <p className="text-4xl md:text-6xl font-black tracking-tight">
+                  <span className="text-yellow-100">{question.a}</span>{' '}
+                  <span className="text-yellow-400">×</span>{' '}
+                  <span className="text-amber-200">{question.b}</span>{' '}
+                  <span className="text-yellow-300/90">= ?</span>
                 </p>
 
                 {lastPick && (
                   <p
                     className={`mt-4 text-sm font-extrabold ${
-                      lastPick.correct ? 'text-green-300' : 'text-red-300'
+                      lastPick.correct ? 'text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]' : 'text-rose-400'
                     }`}
                   >
                     {lastPick.correct ? 'Correct!' : 'Try again'}
@@ -539,30 +589,30 @@ export default function GamePage({ onNavigate }: GamePageProps) {
 
           {phase === 'ended' && (
             <div className="text-center">
-              <div className="mx-auto mb-6 w-20 h-20 rounded-3xl bg-gradient-to-br from-yellow-500/20 to-yellow-500/5 border border-yellow-500/25 flex items-center justify-center shadow-inner">
-                <Trophy className="w-10 h-10 text-yellow-300" />
+              <div className="mx-auto mb-6 w-20 h-20 rounded-3xl bg-gradient-to-br from-amber-500/30 to-yellow-600/20 border border-yellow-500/30 flex items-center justify-center shadow-xl shadow-amber-900/35">
+                <Trophy className="w-10 h-10 text-yellow-200" />
               </div>
               <h2
                 className={`text-2xl md:text-3xl font-black mb-2 tracking-tight ${
-                  endReason === 'wrong' ? 'text-red-300' : 'text-yellow-300'
+                  endReason === 'wrong'
+                    ? 'text-rose-400'
+                    : 'bg-gradient-to-r from-yellow-300 to-amber-300 bg-clip-text text-transparent'
                 }`}
               >
                 {endReason === 'wrong' ? 'Game Over!' : 'Time’s up!'}
               </h2>
               {endReason === 'wrong' ? (
-                <p className="text-sm text-gray-300 mb-2">
-                  Wrong answer ends the game. Try again!
-                </p>
+                <p className="text-sm text-rose-200/80 mb-2">Wrong answer ends the game. Try again!</p>
               ) : null}
 
               <div className="mt-4 grid grid-cols-2 gap-3 max-w-md mx-auto">
-                <div className="rounded-2xl border border-yellow-500/20 bg-black/35 p-4">
-                  <p className="text-xs text-gray-400 font-bold">FINAL SCORE</p>
-                  <p className="text-3xl font-black text-white tabular-nums mt-1">{score}</p>
+                <div className="rounded-2xl border border-amber-400/30 bg-gradient-to-br from-amber-950/50 to-orange-950/30 p-4 shadow-md shadow-amber-500/10">
+                  <p className="text-xs text-amber-200/70 font-bold">FINAL SCORE</p>
+                  <p className="text-3xl font-black text-amber-100 tabular-nums mt-1">{score}</p>
                 </div>
-                <div className="rounded-2xl border border-yellow-500/20 bg-black/35 p-4">
-                  <p className="text-xs text-gray-400 font-bold">CORRECT</p>
-                  <p className="text-3xl font-black text-white tabular-nums mt-1">{correctCount}</p>
+                <div className="rounded-2xl border border-yellow-500/30 bg-gradient-to-br from-neutral-950/80 to-amber-950/35 p-4 shadow-md shadow-black/30">
+                  <p className="text-xs text-yellow-200/80 font-bold">CORRECT</p>
+                  <p className="text-3xl font-black text-yellow-100 tabular-nums mt-1">{correctCount}</p>
                 </div>
               </div>
 
@@ -571,14 +621,14 @@ export default function GamePage({ onNavigate }: GamePageProps) {
                   onClick={() => {
                     setPhase('ready');
                   }}
-                  className="rounded-2xl bg-yellow-400 text-black px-5 py-3.5 font-black hover:bg-yellow-300 transition-all active:scale-[0.99] flex items-center justify-center gap-2 shadow-lg shadow-yellow-500/10"
+                  className="rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 text-black px-5 py-3.5 font-black hover:from-amber-300 hover:to-orange-400 transition-all active:scale-[0.99] flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25"
                 >
                   <RotateCcw className="w-4 h-4" />
                   Restart
                 </button>
                 <button
                   onClick={() => setPhase('start')}
-                  className="rounded-2xl border border-yellow-500/25 bg-black/40 px-5 py-3.5 font-black text-yellow-200 hover:bg-black/55 transition-all active:scale-[0.99]"
+                  className="rounded-2xl border-2 border-yellow-500/35 bg-neutral-900/90 px-5 py-3.5 font-black text-yellow-200 hover:bg-neutral-800 transition-all active:scale-[0.99]"
                 >
                   Change difficulty
                 </button>

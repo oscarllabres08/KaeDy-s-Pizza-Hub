@@ -33,11 +33,11 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
   const [paymentReference, setPaymentReference] = useState('');
   const [paymentProof, setPaymentProof] = useState<File | null>(null);
   const [walletSettings, setWalletSettings] = useState<
-    Record<WalletMethod, { qrSrc: string | null; accountNumber: string | null }>
+    Record<WalletMethod, { qrSrc: string | null; accountNumber: string | null; accountName: string | null }>
   >({
-    GCash: { qrSrc: '/assets/qr-placeholder.svg', accountNumber: null },
-    Maya: { qrSrc: null, accountNumber: null },
-    PayPal: { qrSrc: null, accountNumber: null },
+    GCash: { qrSrc: '/assets/qr-placeholder.svg', accountNumber: null, accountName: null },
+    Maya: { qrSrc: null, accountNumber: null, accountName: null },
+    PayPal: { qrSrc: null, accountNumber: null, accountName: null },
   });
   const [notes, setNotes] = useState('');
   const [deliveryName, setDeliveryName] = useState('');
@@ -122,23 +122,25 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
     try {
       const { data, error } = await supabase
         .from('payment_method_settings')
-        .select('method, qr_storage_path, account_number, updated_at')
+        .select('method, qr_storage_path, account_number, account_name, updated_at')
         .in('method', WALLET_METHODS);
 
       if (error) throw error;
-      const next: Record<WalletMethod, { qrSrc: string | null; accountNumber: string | null }> = {
-        GCash: { qrSrc: '/assets/qr-placeholder.svg', accountNumber: null },
-        Maya: { qrSrc: null, accountNumber: null },
-        PayPal: { qrSrc: null, accountNumber: null },
+      const next: Record<WalletMethod, { qrSrc: string | null; accountNumber: string | null; accountName: string | null }> = {
+        GCash: { qrSrc: '/assets/qr-placeholder.svg', accountNumber: null, accountName: null },
+        Maya: { qrSrc: null, accountNumber: null, accountName: null },
+        PayPal: { qrSrc: null, accountNumber: null, accountName: null },
       };
       for (const row of data || []) {
         const method = row.method as WalletMethod;
         const qrPath = row.qr_storage_path;
         const account = row.account_number ?? null;
+        const acctName = row.account_name ?? null;
         if (!qrPath) {
           next[method] = {
             qrSrc: method === 'GCash' ? '/assets/qr-placeholder.svg' : null,
             accountNumber: account,
+            accountName: acctName,
           };
           continue;
         }
@@ -147,15 +149,16 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
         next[method] = {
           qrSrc: `${pub.publicUrl}${v}`,
           accountNumber: account,
+          accountName: acctName,
         };
       }
       setWalletSettings(next);
     } catch (e) {
       console.warn('Could not load payment method settings; using fallback.', e);
       setWalletSettings({
-        GCash: { qrSrc: '/assets/qr-placeholder.svg', accountNumber: null },
-        Maya: { qrSrc: null, accountNumber: null },
-        PayPal: { qrSrc: null, accountNumber: null },
+        GCash: { qrSrc: '/assets/qr-placeholder.svg', accountNumber: null, accountName: null },
+        Maya: { qrSrc: null, accountNumber: null, accountName: null },
+        PayPal: { qrSrc: null, accountNumber: null, accountName: null },
       });
     }
   }, []);
@@ -727,11 +730,21 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
                   </div>
                 </div>
 
-                <div className="mb-4 rounded-lg border border-yellow-500/20 bg-black/30 px-3 py-2">
-                  <p className="text-xs font-semibold text-gray-400">E-wallet account number</p>
-                  <p className="text-sm text-yellow-200 mt-1 break-words">
-                    {walletSettings[paymentMethod as WalletMethod]?.accountNumber || 'No account number set yet.'}
-                  </p>
+                <div className="mb-4 space-y-3 rounded-lg border border-yellow-500/20 bg-black/30 px-3 py-2">
+                  <div>
+                    <p className="text-xs font-semibold text-gray-400">Account name</p>
+                    <p className="text-sm text-yellow-200 mt-1 break-words">
+                      {walletSettings[paymentMethod as WalletMethod]?.accountName?.trim() ||
+                        'Not set yet.'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-400">Account number</p>
+                    <p className="text-sm text-yellow-200 mt-1 break-words">
+                      {walletSettings[paymentMethod as WalletMethod]?.accountNumber?.trim() ||
+                        'No account number set yet.'}
+                    </p>
+                  </div>
                 </div>
 
                 <div className="mb-4">

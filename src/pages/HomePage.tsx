@@ -1,14 +1,29 @@
-import { useEffect, useState } from 'react';
-import { Pizza, Clock, Heart, Megaphone } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight, Clock, Heart, Megaphone, Pizza } from 'lucide-react';
 import { SocialContactIcons } from '../components/SocialContactIcons';
-import { supabase, Announcement } from '../lib/supabase';
+import { PrivacyTermsLinks } from '../components/PrivacyTermsLinks';
+import { supabase, Announcement, promoCardImagePublicUrl } from '../lib/supabase';
 
 type HomePageProps = {
   onNavigate: (page: string) => void;
 };
 
+function announcementKind(a: Announcement): 'card' | 'marquee' {
+  return a.promo_type === 'marquee' ? 'marquee' : 'card';
+}
+
+/** Text for the hero ticker (marquee-type promos only on the site). */
+function formatMarqueeTicker(a: Announcement): string {
+  const t = a.title?.trim();
+  const c = a.content?.trim();
+  if (t && c) return `${t} — ${c}`;
+  return c || t || '';
+}
+
 export default function HomePage({ onNavigate }: HomePageProps) {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [promoCardIndex, setPromoCardIndex] = useState(0);
+  const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
     fetchAnnouncements();
@@ -20,16 +35,51 @@ export default function HomePage({ onNavigate }: HomePageProps) {
       .select('*')
       .eq('active', true)
       .order('created_at', { ascending: false })
-      .limit(3);
+      .limit(40);
 
     if (data) setAnnouncements(data);
   };
 
-  const activeAnnouncements = announcements.filter((announcement) => announcement.active);
-  const latestPromo = activeAnnouncements[0];
-  const promoText = latestPromo
-    ? `PROMO: ${latestPromo.title} - ${latestPromo.content}`
-    : 'PROMO: No active promo right now.';
+  const activeAnnouncements = announcements.filter((a) => a.active);
+  const cardAnnouncements = activeAnnouncements.filter((a) => announcementKind(a) === 'card');
+  const marqueePromo = activeAnnouncements.find((a) => announcementKind(a) === 'marquee');
+  const marqueeText = marqueePromo ? formatMarqueeTicker(marqueePromo) : '';
+  const nCardPromos = cardAnnouncements.length;
+
+  useEffect(() => {
+    setPromoCardIndex((i) => (nCardPromos === 0 ? 0 : Math.min(i, nCardPromos - 1)));
+  }, [nCardPromos]);
+
+  const goNextPromoCard = useCallback(() => {
+    if (nCardPromos < 2) return;
+    setPromoCardIndex((i) => Math.min(i + 1, nCardPromos - 1));
+  }, [nCardPromos]);
+
+  const goPrevPromoCard = useCallback(() => {
+    if (nCardPromos < 2) return;
+    setPromoCardIndex((i) => Math.max(i - 1, 0));
+  }, [nCardPromos]);
+
+  const onPromoCardTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const onPromoCardTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current == null || nCardPromos < 2) {
+      touchStartX.current = null;
+      return;
+    }
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (dx < -40) {
+      setPromoCardIndex((i) => Math.min(i + 1, nCardPromos - 1));
+    } else if (dx > 40) {
+      setPromoCardIndex((i) => Math.max(i - 1, 0));
+    }
+  };
+
+  const canPromoPrev = nCardPromos > 1 && promoCardIndex > 0;
+  const canPromoNext = nCardPromos > 1 && promoCardIndex < nCardPromos - 1;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black to-neutral-900">
@@ -41,29 +91,136 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             alt="KaeDy's Pizza Hub Store"
             className="absolute inset-0 w-full h-full object-cover opacity-100"
           />
+          {marqueeText ? (
+            <div className="absolute bottom-0 left-0 right-0 z-10 px-3 pb-2 pt-0">
+              <div className="mx-auto max-w-6xl overflow-hidden rounded-md border border-yellow-400/40 bg-black/80 backdrop-blur-sm">
+                <div className="marquee-track text-yellow-300 text-[11px] font-semibold py-2 whitespace-nowrap">
+                  <span className="pl-4 pr-16">{marqueeText}</span>
+                  <span className="pl-4 pr-16" aria-hidden="true">
+                    {marqueeText}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <div className="px-4 pb-10">
-          {/* Promo update card */}
-          <div className="mt-4 rounded-2xl border border-yellow-500/30 bg-black/60 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-green-400/20 border border-green-400/30" />
-              <span className="text-xs font-bold text-yellow-300">ACTIVE • PROMO UPDATE</span>
+          {/* Promo update card(s) — swipe or arrows when multiple */}
+          <div className="mt-4 relative rounded-2xl border border-yellow-500/30 bg-black/60 shadow-[0_20px_60px_rgba(0,0,0,0.5)] overflow-hidden">
+            <div className="flex items-center justify-between gap-2 px-4 pt-4">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="inline-flex items-center justify-center w-3 h-3 shrink-0 rounded-full bg-green-400/20 border border-green-400/30" />
+                <span className="text-xs font-bold text-yellow-300">ACTIVE • PROMO UPDATE</span>
+              </div>
+              {nCardPromos > 1 ? (
+                <div className="flex items-center gap-1.5 shrink-0 text-yellow-300/90">
+                  <span className="text-[10px] font-semibold tabular-nums">
+                    {promoCardIndex + 1}/{nCardPromos}
+                  </span>
+                  <ChevronRight className="w-4 h-4" aria-hidden />
+                </div>
+              ) : null}
+            </div>
+            {canPromoPrev ? (
+              <button
+                type="button"
+                onClick={goPrevPromoCard}
+                className="absolute left-1 top-[58%] z-10 -translate-y-1/2 p-1 text-yellow-400 hover:text-yellow-200 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80 rounded-md"
+                aria-label="Previous promo"
+              >
+                <ChevronLeft className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" strokeWidth={2.5} />
+              </button>
+            ) : null}
+            {canPromoNext ? (
+              <button
+                type="button"
+                onClick={goNextPromoCard}
+                className="absolute right-1 top-[58%] z-10 -translate-y-1/2 p-1 text-yellow-400 hover:text-yellow-200 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80 rounded-md"
+                aria-label="Next promo"
+              >
+                <ChevronRight className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" strokeWidth={2.5} />
+              </button>
+            ) : null}
+
+            <div className="overflow-hidden pl-2 pr-2 pb-4 pt-2">
+              {nCardPromos === 0 ? (
+                <div className="px-2 pt-1">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center shrink-0">
+                      <Megaphone className="w-5 h-5 text-yellow-300" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-yellow-200 font-extrabold">No Active Promo</div>
+                      <div className="text-sm text-gray-200 mt-1">Check back soon for updates.</div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  className="touch-pan-y select-none"
+                  onTouchStart={onPromoCardTouchStart}
+                  onTouchEnd={onPromoCardTouchEnd}
+                >
+                  <div
+                    className="flex w-full transition-transform duration-300 ease-out"
+                    style={{ transform: `translateX(-${promoCardIndex * 100}%)` }}
+                  >
+                    {cardAnnouncements.map((p) => {
+                      const heroUrl = promoCardImagePublicUrl(p.card_image_path, p.created_at);
+                      return (
+                        <div key={p.id} className="min-w-full shrink-0 basis-full px-2">
+                          {heroUrl ? (
+                            <div className="relative min-h-[136px] rounded-xl overflow-hidden border border-yellow-500/25 shadow-inner">
+                              <img
+                                src={heroUrl}
+                                alt=""
+                                className="absolute inset-0 w-full h-full object-cover"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/55 to-black/20" />
+                              <div className="relative z-10 p-3 flex flex-col justify-end min-h-[136px]">
+                                <div className="text-yellow-200 font-extrabold leading-snug drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
+                                  {p.title}
+                                </div>
+                                <div className="text-sm text-gray-100 mt-1 line-clamp-4 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                                  {p.content}
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center shrink-0">
+                                <Megaphone className="w-5 h-5 text-yellow-300" />
+                              </div>
+                              <div className="min-w-0 flex-1 pb-0.5">
+                                <div className="text-yellow-200 font-extrabold leading-snug">{p.title}</div>
+                                <div className="text-sm text-gray-200 mt-1 line-clamp-4">{p.content}</div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div className="mt-3 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center">
-                <Megaphone className="w-5 h-5 text-yellow-300" />
+            {nCardPromos > 1 ? (
+              <div className="flex justify-center gap-1.5 pb-3 pt-0">
+                {cardAnnouncements.map((p, i) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => setPromoCardIndex(i)}
+                    className={`h-1.5 rounded-full transition-all ${
+                      i === promoCardIndex ? 'w-5 bg-yellow-400' : 'w-1.5 bg-yellow-500/35 hover:bg-yellow-500/55'
+                    }`}
+                    aria-label={`Promo ${i + 1} of ${nCardPromos}`}
+                  />
+                ))}
               </div>
-              <div className="min-w-0">
-                <div className="text-yellow-200 font-extrabold">
-                  {latestPromo?.title || 'No Active Promo'}
-                </div>
-                <div className="text-sm text-gray-200 mt-1 line-clamp-2">
-                  {latestPromo?.content || 'Check back soon for updates.'}
-                </div>
-              </div>
-            </div>
+            ) : null}
           </div>
 
           {/* Stat cards */}
@@ -84,24 +241,6 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               <Clock className="w-8 h-8 mx-auto text-yellow-300" />
               <div className="mt-1 text-yellow-200 font-extrabold text-lg">Fast</div>
               <div className="text-[11px] text-yellow-200/80">Delivery</div>
-            </div>
-          </div>
-
-          {/* Operating hours */}
-          <div className="mt-5 rounded-2xl border border-yellow-500/30 bg-black/50 p-4">
-            <div className="flex items-start gap-3">
-              <div className="w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center">
-                <Clock className="w-6 h-6 text-yellow-300" />
-              </div>
-              <div>
-                <div className="text-yellow-200 font-extrabold">Operating Hours</div>
-                <div className="text-[12px] text-gray-300 mt-1">
-                  Mon - Fri <span className="font-semibold text-yellow-200">9am - 9pm</span>
-                </div>
-                <div className="text-[12px] text-gray-300 mt-1">
-                  Sat &amp; Sun <span className="font-semibold text-yellow-200">9am - 10pm</span>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -173,17 +312,23 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             alt="KaeDy's Pizza Hub Store"
             className="absolute inset-0 w-full h-full object-cover opacity-100  "
           />
-          <div className="absolute top-4 left-0 right-0 z-10 px-3 md:px-6">
-            <div className="mx-auto max-w-6xl overflow-hidden rounded-md border border-yellow-400/40 bg-black/75 backdrop-blur-sm">
-              <div className="marquee-track text-yellow-300 text-xs md:text-sm font-semibold py-2 whitespace-nowrap">
-                <span className="pl-6 pr-24 md:pr-40">{promoText}</span>
-                <span className="pl-6 pr-24 md:pr-40" aria-hidden="true">
-                  {promoText}
-                </span>
+          {marqueeText ? (
+            <div className="absolute bottom-0 left-0 right-0 z-10 px-3 pb-4 pt-0 md:px-6 md:pb-6">
+              <div className="mx-auto max-w-6xl overflow-hidden rounded-md border border-yellow-400/40 bg-black/75 backdrop-blur-sm">
+                <div className="marquee-track text-yellow-300 text-xs md:text-sm font-semibold py-2 whitespace-nowrap">
+                  <span className="pl-6 pr-24 md:pr-40">{marqueeText}</span>
+                  <span className="pl-6 pr-24 md:pr-40" aria-hidden="true">
+                    {marqueeText}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="relative z-10 text-center text-white px-4 animate-fadeIn">
+          ) : null}
+          <div
+            className={`relative z-10 text-center text-white px-4 animate-fadeIn ${
+              marqueeText ? 'mb-14 md:mb-16' : ''
+            }`}
+          >
             <button
               onClick={() => onNavigate('menu')}
               className="bg-yellow-400 text-black px-8 py-4 rounded-full text-lg font-semibold hover:bg-[#ffe85a] transition-all transform hover:scale-110 shadow-2xl animate-bounce"
@@ -193,7 +338,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           </div>
         </div>
 
-        {activeAnnouncements.length > 0 && (
+        {cardAnnouncements.length > 0 && (
           <div className="max-w-7xl mx-auto px-4 py-12">
             <div className="mb-6 md:mb-8 flex items-center justify-center gap-3">
               <div className="w-10 h-10 rounded-full bg-yellow-500/15 border border-yellow-500/40 flex items-center justify-center">
@@ -204,28 +349,67 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               </h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
-              {activeAnnouncements.map((announcement) => (
-                <div
-                  key={announcement.id}
-                  className="group rounded-2xl border border-yellow-500/30 bg-neutral-900/70 p-5 md:p-6 shadow-lg hover:border-yellow-400/60 hover:bg-neutral-900/90 transition-all"
-                >
-                  <div className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-green-500/15 text-green-300 border border-green-500/30 mb-3">
-                    Active now
+              {cardAnnouncements.map((announcement) => {
+                const heroUrl = promoCardImagePublicUrl(announcement.card_image_path, announcement.created_at);
+                return (
+                  <div
+                    key={announcement.id}
+                    className={`group rounded-2xl border border-yellow-500/30 shadow-lg overflow-hidden transition-all ${
+                      heroUrl
+                        ? 'hover:border-yellow-400/60'
+                        : 'bg-neutral-900/70 hover:border-yellow-400/60 hover:bg-neutral-900/90'
+                    }`}
+                  >
+                    {heroUrl ? (
+                      <div className="relative min-h-[15rem]">
+                        <img
+                          src={heroUrl}
+                          alt=""
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/45 to-black/25" />
+                        <div className="absolute top-3 left-3 flex flex-wrap gap-2">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-green-500/25 text-green-200 border border-green-500/40 backdrop-blur-sm">
+                            Active now
+                          </span>
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-yellow-500/25 text-yellow-100 border border-yellow-500/40 backdrop-blur-sm">
+                            Promo Update
+                          </span>
+                        </div>
+                        <div className="absolute bottom-0 left-0 right-0 p-5">
+                          <h3 className="text-xl font-bold text-yellow-200 mb-2 leading-tight drop-shadow-md">
+                            {announcement.title}
+                          </h3>
+                          <p className="text-gray-100 leading-relaxed drop-shadow">
+                            {announcement.content}
+                          </p>
+                          <p className="mt-3 text-xs text-gray-300">
+                            {new Date(announcement.created_at).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-5 md:p-6">
+                        <div className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-green-500/15 text-green-300 border border-green-500/30 mb-3">
+                          Active now
+                        </div>
+                        <div className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-yellow-500/15 text-yellow-200 border border-yellow-500/30 mb-3 ml-2">
+                          Promo Update
+                        </div>
+                        <h3 className="text-xl font-bold text-yellow-300 mb-2 leading-tight">
+                          {announcement.title}
+                        </h3>
+                        <p className="text-gray-200 leading-relaxed">
+                          {announcement.content}
+                        </p>
+                        <p className="mt-4 text-xs text-gray-400">
+                          {new Date(announcement.created_at).toLocaleString()}
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  <div className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-yellow-500/15 text-yellow-200 border border-yellow-500/30 mb-3 ml-2">
-                    Promo Update
-                  </div>
-                  <h3 className="text-xl font-bold text-yellow-300 mb-2 leading-tight">
-                    {announcement.title}
-                  </h3>
-                  <p className="text-gray-200 leading-relaxed">
-                    {announcement.content}
-                  </p>
-                  <p className="mt-4 text-xs text-gray-400">
-                    {new Date(announcement.created_at).toLocaleString()}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -269,8 +453,9 @@ export default function HomePage({ onNavigate }: HomePageProps) {
       </div>
 
       <section className="border-t border-yellow-500/20 bg-black/30 px-4 py-10 lg:py-12">
-        <div className="mx-auto max-w-2xl">
+        <div className="mx-auto max-w-2xl flex flex-col items-center">
           <SocialContactIcons />
+          <PrivacyTermsLinks layout="center" className="mt-6" />
         </div>
       </section>
 
