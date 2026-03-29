@@ -167,7 +167,7 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black to-neutral-900 py-8 px-4">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center gap-3 mb-6 animate-fadeIn">
+        <div className="flex items-center gap-3 mb-6 animate-menuReveal motion-reduce:animate-none">
           <h1 className="text-2xl md:text-3xl font-bold text-yellow-300 shrink-0 tracking-tight">
             Menu
           </h1>
@@ -222,7 +222,7 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
           </div>
         </div>
 
-        <div className="mb-6 overflow-x-auto">
+        <div className="mb-6 overflow-x-auto animate-menuReveal [animation-delay:85ms] motion-reduce:animate-none">
           <div className="flex gap-2 pb-2 min-w-max">
             {categories.map((category) => (
               <button
@@ -230,10 +230,10 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
                 onClick={() => {
                   setSelectedCategory(category);
                 }}
-                className={`px-4 py-1.5 rounded-lg font-semibold text-xs sm:text-sm flex-none ${
+                className={`px-4 py-1.5 rounded-lg font-semibold text-xs sm:text-sm flex-none transition-all duration-300 ease-out ${
                   selectedCategory === category
-                    ? 'bg-yellow-400 text-black shadow-md'
-                    : 'bg-neutral-800 text-gray-200 hover:bg-neutral-700'
+                    ? 'bg-yellow-400 text-black shadow-md ring-2 ring-yellow-400/50 scale-[1.02]'
+                    : 'bg-neutral-800 text-gray-200 hover:bg-neutral-700 hover:scale-[1.02] active:scale-95'
                 }`}
               >
                 {category}
@@ -242,15 +242,15 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
           </div>
         </div>
         {subcategoryOptions.length > 0 && (
-          <div className="mb-6 overflow-x-auto">
+          <div className="mb-6 overflow-x-auto animate-menuReveal [animation-delay:130ms] motion-reduce:animate-none">
             <div className="flex gap-3 pb-2 min-w-max">
               <button
                 type="button"
                 onClick={() => setSelectedSubcategory('All')}
-                className={`px-4 py-1.5 rounded-lg font-semibold text-xs flex-none ${
+                className={`px-4 py-1.5 rounded-lg font-semibold text-xs flex-none transition-all duration-300 ease-out ${
                   selectedSubcategory === 'All'
-                    ? 'bg-yellow-400 text-black shadow-md'
-                    : 'bg-neutral-800 text-gray-200 hover:bg-neutral-700'
+                    ? 'bg-yellow-400 text-black shadow-md ring-2 ring-yellow-400/50 scale-[1.02]'
+                    : 'bg-neutral-800 text-gray-200 hover:bg-neutral-700 hover:scale-[1.02] active:scale-95'
                 }`}
               >
                 All {selectedCategory}
@@ -260,10 +260,10 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
                   key={subcategory}
                   type="button"
                   onClick={() => setSelectedSubcategory(subcategory)}
-                  className={`px-4 py-1.5 rounded-lg font-semibold text-xs flex-none ${
+                  className={`px-4 py-1.5 rounded-lg font-semibold text-xs flex-none transition-all duration-300 ease-out ${
                     selectedSubcategory === subcategory
-                      ? 'bg-yellow-400 text-black shadow-md'
-                      : 'bg-neutral-800 text-gray-200 hover:bg-neutral-700'
+                      ? 'bg-yellow-400 text-black shadow-md ring-2 ring-yellow-400/50 scale-[1.02]'
+                      : 'bg-neutral-800 text-gray-200 hover:bg-neutral-700 hover:scale-[1.02] active:scale-95'
                   }`}
                 >
                   {subcategory}
@@ -274,10 +274,15 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
         )}
 
         {loading ? (
-          <div className="text-center py-10 text-gray-300">Loading menu...</div>
+          <div className="text-center py-10 text-gray-300 animate-fadeIn motion-reduce:animate-none">
+            Loading menu...
+          </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 items-stretch">
-            {filteredItems.map((item) => {
+          <div
+            key={`${selectedCategory}-${selectedSubcategory}`}
+            className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 items-stretch"
+          >
+            {filteredItems.map((item, index) => {
               const available = isItemAvailable(item);
               const quantity = quantities[item.id] ?? 1;
               const openPreview = () => setPreviewItem(item);
@@ -294,7 +299,8 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
                     }
                   }}
                   aria-label={`View details: ${item.name}`}
-                  className="group bg-neutral-900 rounded-lg shadow-md overflow-hidden border border-yellow-500/20 flex flex-col h-full cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950"
+                  className="group bg-neutral-900 rounded-lg shadow-md overflow-hidden border border-yellow-500/20 flex flex-col h-full cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950 animate-menuCardIn motion-reduce:animate-none"
+                  style={{ animationDelay: `${Math.min(index, 24) * 42}ms` }}
                 >
                   <div className="w-full shrink-0 pointer-events-none">
                     <div className="relative w-full aspect-[4/3] overflow-hidden">
@@ -404,8 +410,8 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
           </div>
         )}
         {previewItem && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4">
-            <div className="bg-neutral-900 rounded-2xl max-w-md w-full overflow-hidden border border-yellow-500/40">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4 animate-menuBackdrop motion-reduce:animate-none">
+            <div className="bg-neutral-900 rounded-2xl max-w-md w-full overflow-hidden border border-yellow-500/40 animate-menuModal motion-reduce:animate-none">
               <div className="relative w-full bg-black/60" style={{ paddingTop: '100%' }}>
                 <img
                   src={previewItem.image_url}

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Clock, Heart, Megaphone, Pizza } from 'lucide-react';
 import { SocialContactIcons } from '../components/SocialContactIcons';
 import { PrivacyTermsLinks } from '../components/PrivacyTermsLinks';
+import { HomeReelsSection } from '../components/HomeReelsSection';
 import { supabase, Announcement, promoCardImagePublicUrl } from '../lib/supabase';
 
 type HomePageProps = {
@@ -82,9 +83,9 @@ export default function HomePage({ onNavigate }: HomePageProps) {
   const canPromoNext = nCardPromos > 1 && promoCardIndex < nCardPromos - 1;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black to-neutral-900">
+    <div className="min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-gradient-to-br from-black to-neutral-900">
       {/* Mobile layout */}
-      <div className="lg:hidden">
+      <div className="lg:hidden w-full min-w-0">
         <div className="relative h-[46vh] bg-black flex items-end justify-center pb-6 overflow-hidden">
           <img
             src="/assets/store.jpg"
@@ -244,6 +245,8 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             </div>
           </div>
 
+          <HomeReelsSection className="mt-7" />
+
           {/* Our story */}
           <div className="mt-7">
             <div className="text-yellow-300 font-black text-3xl tracking-tight">OUR STORY</div>
@@ -305,7 +308,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
       </div>
 
       {/* Desktop layout (existing) */}
-      <div className="hidden lg:block">
+      <div className="hidden lg:block w-full min-w-0 overflow-x-hidden">
         <div className="relative h-[90vh] flex items-end justify-center bg-black pb-10">
           <img
             src="/assets/store.jpg"
@@ -413,6 +416,10 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             </div>
           </div>
         )}
+
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <HomeReelsSection />
+        </div>
 
         <div className="max-w-7xl mx-auto px-4 py-8">
           <h2 className="text-3xl font-bold text-center mb-6 text-yellow-300">

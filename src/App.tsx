@@ -1,18 +1,27 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import Navigation from './components/Navigation';
 import Footer from './components/Footer';
-import HomePage from './pages/HomePage';
-import MenuPage from './pages/MenuPage';
-import GamePage from './pages/GamePage';
-import GalleryPage from './pages/GalleryPage';
-import AboutPage from './pages/AboutPage';
-import ContactPage from './pages/ContactPage';
-import CartPage from './pages/CartPage';
-import ProfilePage from './pages/ProfilePage';
-import AuthForm from './components/AuthForm';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
 import { BuyNowProvider } from './contexts/BuyNowContext';
+
+const HomePage = lazy(() => import('./pages/HomePage'));
+const MenuPage = lazy(() => import('./pages/MenuPage'));
+const GamePage = lazy(() => import('./pages/GamePage'));
+const GalleryPage = lazy(() => import('./pages/GalleryPage'));
+const AboutPage = lazy(() => import('./pages/AboutPage'));
+const ContactPage = lazy(() => import('./pages/ContactPage'));
+const CartPage = lazy(() => import('./pages/CartPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const AuthForm = lazy(() => import('./components/AuthForm'));
+
+function PageFallback() {
+  return (
+    <div className="min-h-[40vh] flex items-center justify-center bg-gradient-to-br from-black to-neutral-900">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-yellow-400" />
+    </div>
+  );
+}
 
 type PageId =
   | 'home'
@@ -97,17 +106,17 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black to-neutral-900">
+      <div className="min-h-screen w-full max-w-[100vw] overflow-x-hidden flex items-center justify-center bg-gradient-to-br from-black to-neutral-900">
         <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-yellow-400" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col pt-16 bg-gradient-to-br from-black to-neutral-900">
+    <div className="min-h-screen w-full max-w-[100vw] overflow-x-hidden flex flex-col pt-16 bg-gradient-to-br from-black to-neutral-900">
       <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
-      <main className="flex-1 pb-24 md:pb-0">
-        {content}
+      <main className="flex-1 min-w-0 pb-24 md:pb-0 w-full">
+        <Suspense fallback={<PageFallback />}>{content}</Suspense>
       </main>
       <div className="hidden md:block">
         <Footer />
