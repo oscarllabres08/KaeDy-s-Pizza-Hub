@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { User, Package, Edit2, Save, X, Settings, Image as ImageIcon, ChevronDown, Trash2, LogOut } from 'lucide-react';
+import { User, Package, Edit2, Save, X, Settings, Image as ImageIcon, ChevronDown, Trash2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase, Order, OrderItem } from '../lib/supabase';
 
@@ -8,7 +8,7 @@ type OrderWithItems = Order & {
 };
 
 export default function ProfilePage() {
-  const { user, customerProfile, loading: authLoading, profilesLoaded, refreshProfiles, signOut } = useAuth();
+  const { user, customerProfile, loading: authLoading, profilesLoaded, refreshProfiles } = useAuth();
   const [orders, setOrders] = useState<OrderWithItems[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
@@ -41,7 +41,6 @@ export default function ProfilePage() {
   const passwordNoticeRef = useRef<HTMLDivElement | null>(null);
   const [passwordSuccessModalOpen, setPasswordSuccessModalOpen] = useState(false);
   const [accountSettingsOpen, setAccountSettingsOpen] = useState(false);
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const avatarOptions = [
     '/avatars/boy1.png',
@@ -226,17 +225,6 @@ export default function ProfilePage() {
     }
   };
 
-  const handleConfirmSignOut = async () => {
-    try {
-      await signOut();
-      setShowLogoutModal(false);
-      window.location.hash = '#home';
-    } catch (error) {
-      console.error('Error signing out:', error);
-      setShowLogoutModal(false);
-    }
-  };
-
   const handleProfileChange = (field: 'full_name' | 'phone' | 'address', value: string) => {
     setProfileForm((prev) => ({ ...prev, [field]: value }));
   };
@@ -345,7 +333,7 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-black to-neutral-900 py-16 px-4 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-xl text-yellow-300 mb-2">You&apos;re not signed in.</p>
+          <p className="text-xl text-heading-secondary mb-2">You&apos;re not signed in.</p>
           <p className="text-sm text-gray-300">Please sign in to view your profile and order history.</p>
         </div>
       </div>
@@ -355,24 +343,13 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black to-neutral-900 py-8 px-4">
       <div className="max-w-4xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8 animate-fadeIn">
-          <div className="min-w-0 flex-1 text-center sm:text-left">
-            <h1 className="text-3xl md:text-4xl font-black text-yellow-300 tracking-tight">
-              My Profile
-            </h1>
-            <p className="mt-1 text-sm text-gray-400">
-              View and update your personal details and orders.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowLogoutModal(true)}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-yellow-500/40 bg-neutral-900/80 text-yellow-300 text-sm font-semibold hover:bg-yellow-500/10 hover:border-yellow-400/60 transition-colors shrink-0 self-center sm:self-start"
-            aria-label="Log out"
-          >
-            <LogOut className="w-4 h-4" />
-            Log out
-          </button>
+        <div className="mb-8 text-center sm:text-left animate-fadeIn">
+          <h1 className="text-3xl md:text-4xl font-black text-heading-primary tracking-tight">
+            My Profile
+          </h1>
+          <p className="mt-1 text-sm text-gray-400">
+            View and update your personal details and orders.
+          </p>
         </div>
 
         <div className="bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950 rounded-3xl shadow-[0_18px_60px_rgba(0,0,0,0.7)] p-6 md:p-8 mb-8 border border-yellow-500/30">
@@ -410,11 +387,11 @@ export default function ProfilePage() {
                 </button>
               </div>
               <div>
-                <h2 className="text-2xl md:text-3xl font-black text-yellow-200 leading-tight">
+                <h2 className="text-2xl md:text-3xl font-black text-heading-primary leading-tight">
                   {customerProfile.full_name}
                 </h2>
                 {customerProfile.username && (
-                  <p className="text-sm text-yellow-300/90 mt-1">
+                  <p className="text-sm text-heading-secondary/90 mt-1">
                     @{customerProfile.username}
                   </p>
                 )}
@@ -430,7 +407,7 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             <div className="rounded-2xl bg-black/40 border border-yellow-500/15 px-4 py-3">
               <div className="flex items-start justify-between gap-3">
-                <p className="text-[11px] font-semibold tracking-wide text-yellow-300/80 uppercase">
+                <p className="text-[11px] font-semibold tracking-wide text-heading-secondary/85 uppercase">
                   Full Name
                 </p>
                 {!editingFields.full_name && (
@@ -459,7 +436,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="rounded-2xl bg-black/40 border border-yellow-500/15 px-4 py-3">
-              <p className="text-[11px] font-semibold tracking-wide text-yellow-300/80 uppercase">
+              <p className="text-[11px] font-semibold tracking-wide text-heading-secondary/85 uppercase">
                 Username
               </p>
               <p className="mt-1 text-sm text-gray-100 break-all">
@@ -471,7 +448,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="rounded-2xl bg-black/40 border border-yellow-500/15 px-4 py-3">
-              <p className="text-[11px] font-semibold tracking-wide text-yellow-300/80 uppercase">
+              <p className="text-[11px] font-semibold tracking-wide text-heading-secondary/85 uppercase">
                 Email
               </p>
               <p className="mt-1 text-sm text-gray-100 break-all">
@@ -481,7 +458,7 @@ export default function ProfilePage() {
 
             <div className="rounded-2xl bg-black/40 border border-yellow-500/15 px-4 py-3">
               <div className="flex items-start justify-between gap-3">
-                <p className="text-[11px] font-semibold tracking-wide text-yellow-300/80 uppercase">
+                <p className="text-[11px] font-semibold tracking-wide text-heading-secondary/85 uppercase">
                   Phone Number
                 </p>
                 {!editingFields.phone && (
@@ -511,7 +488,7 @@ export default function ProfilePage() {
 
             <div className="rounded-2xl bg-black/40 border border-yellow-500/15 px-4 py-3 md:row-span-1">
               <div className="flex items-start justify-between gap-3">
-                <p className="text-[11px] font-semibold tracking-wide text-yellow-300/80 uppercase">
+                <p className="text-[11px] font-semibold tracking-wide text-heading-secondary/85 uppercase">
                   Address
                 </p>
                 {!editingFields.address && (
@@ -573,7 +550,7 @@ export default function ProfilePage() {
             >
               <span className="inline-flex items-center gap-2">
                 <Settings className="w-5 h-5 text-yellow-400" />
-                <span className="text-lg font-bold text-yellow-300">Account Settings</span>
+                <span className="text-lg font-bold text-heading-secondary">Account Settings</span>
               </span>
               <ChevronDown
                 className={`w-5 h-5 text-yellow-200 transition-transform ${accountSettingsOpen ? 'rotate-180' : ''}`}
@@ -668,7 +645,7 @@ export default function ProfilePage() {
         <div className="bg-neutral-900 rounded-xl shadow-lg p-6 border border-yellow-500/30">
           <div className="flex items-center gap-2 mb-6">
             <Package className="w-6 h-6 text-yellow-400" />
-            <h2 className="text-2xl font-bold text-yellow-300">My Orders</h2>
+            <h2 className="text-2xl font-bold text-heading-primary">My Orders</h2>
           </div>
 
           {ordersLoading ? (
@@ -676,7 +653,7 @@ export default function ProfilePage() {
           ) : (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-bold text-yellow-200 mb-3">My Orders</h3>
+                <h3 className="text-lg font-bold text-heading-secondary mb-3">My Orders</h3>
                 {activeOrders.length === 0 ? (
                   <p className="text-sm text-gray-400">No active orders.</p>
                 ) : (
@@ -738,7 +715,7 @@ export default function ProfilePage() {
                   className="flex w-full items-center justify-between gap-3 p-4 text-left outline-none transition-colors hover:bg-yellow-500/[0.06] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-yellow-400/50"
                 >
                   <div className="min-w-0 flex-1">
-                    <h3 className="text-lg font-bold text-yellow-200">Order History</h3>
+                    <h3 className="text-lg font-bold text-heading-secondary">Order History</h3>
                     <p className="mt-1 text-xs text-gray-500">
                       {orderHistorySectionOpen
                         ? 'Tap an order below to show items and payment details.'
@@ -930,7 +907,7 @@ export default function ProfilePage() {
           <div className="relative w-full max-w-md rounded-2xl bg-neutral-950 border border-yellow-500/40 shadow-2xl overflow-hidden">
             <div className="flex items-center justify-between px-5 pt-5 pb-4">
               <div>
-                <h3 className="text-lg font-bold text-yellow-300">Choose an avatar</h3>
+                <h3 className="text-lg font-bold text-heading-secondary">Choose an avatar</h3>
                 <p className="text-xs text-gray-300 mt-1">Saved locally on this device.</p>
               </div>
               <button
@@ -1000,42 +977,6 @@ export default function ProfilePage() {
                   className="px-4 py-2 rounded-lg text-sm font-semibold bg-emerald-500 text-black hover:bg-emerald-400 transition-colors"
                 >
                   OK
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showLogoutModal && (
-        <div className="fixed inset-0 z-[65] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4">
-          <button
-            type="button"
-            className="absolute inset-0"
-            onClick={() => setShowLogoutModal(false)}
-            aria-label="Close log out confirmation"
-          />
-          <div className="relative w-full max-w-sm rounded-2xl bg-neutral-950 border border-yellow-500/30 shadow-2xl overflow-hidden">
-            <div className="px-5 pt-5 pb-4">
-              <h3 className="text-lg font-bold text-yellow-300">Log out?</h3>
-              <p className="mt-2 text-sm text-gray-200">
-                You will need to sign in again to place orders or view your profile.
-              </p>
-              <div className="mt-5 flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowLogoutModal(false)}
-                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-neutral-800 text-gray-100 hover:bg-neutral-700 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleConfirmSignOut}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-yellow-500 text-black hover:bg-yellow-400 transition-colors"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Log out
                 </button>
               </div>
             </div>

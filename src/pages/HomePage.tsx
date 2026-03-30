@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Clock, Heart, Megaphone, Pizza } from 'lucid
 import { SocialContactIcons } from '../components/SocialContactIcons';
 import { PrivacyTermsLinks } from '../components/PrivacyTermsLinks';
 import { HomeReelsSection } from '../components/HomeReelsSection';
+import { HomeGallerySection } from '../components/HomeGallerySection';
 import { supabase, Announcement, promoCardImagePublicUrl } from '../lib/supabase';
 
 type HomePageProps = {
@@ -95,7 +96,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           {marqueeText ? (
             <div className="absolute bottom-0 left-0 right-0 z-10 px-3 pb-2 pt-0">
               <div className="mx-auto max-w-6xl overflow-hidden rounded-md border border-yellow-400/40 bg-black/80 backdrop-blur-sm">
-                <div className="marquee-track text-yellow-300 text-[11px] font-semibold py-2 whitespace-nowrap">
+                <div className="marquee-track text-heading-secondary text-[11px] font-semibold py-2 whitespace-nowrap">
                   <span className="pl-4 pr-16">{marqueeText}</span>
                   <span className="pl-4 pr-16" aria-hidden="true">
                     {marqueeText}
@@ -112,10 +113,10 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             <div className="flex items-center justify-between gap-2 px-4 pt-4">
               <div className="flex items-center gap-2 min-w-0">
                 <span className="inline-flex items-center justify-center w-3 h-3 shrink-0 rounded-full bg-green-400/20 border border-green-400/30" />
-                <span className="text-xs font-bold text-yellow-300">ACTIVE • PROMO UPDATE</span>
+                <span className="text-xs font-bold text-heading-secondary">ACTIVE • PROMO UPDATE</span>
               </div>
               {nCardPromos > 1 ? (
-                <div className="flex items-center gap-1.5 shrink-0 text-yellow-300/90">
+                <div className="flex items-center gap-1.5 shrink-0 text-heading-secondary/90">
                   <span className="text-[10px] font-semibold tabular-nums">
                     {promoCardIndex + 1}/{nCardPromos}
                   </span>
@@ -152,7 +153,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                       <Megaphone className="w-5 h-5 text-yellow-300" />
                     </div>
                     <div className="min-w-0">
-                      <div className="text-yellow-200 font-extrabold">No Active Promo</div>
+                      <div className="text-heading-primary font-extrabold">No Active Promo</div>
                       <div className="text-sm text-gray-200 mt-1">Check back soon for updates.</div>
                     </div>
                   </div>
@@ -180,7 +181,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                               />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/55 to-black/20" />
                               <div className="relative z-10 p-3 flex flex-col justify-end min-h-[136px]">
-                                <div className="text-yellow-200 font-extrabold leading-snug drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
+                                <div className="text-heading-primary font-extrabold leading-snug drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
                                   {p.title}
                                 </div>
                                 <div className="text-sm text-gray-100 mt-1 line-clamp-4 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
@@ -194,7 +195,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                                 <Megaphone className="w-5 h-5 text-yellow-300" />
                               </div>
                               <div className="min-w-0 flex-1 pb-0.5">
-                                <div className="text-yellow-200 font-extrabold leading-snug">{p.title}</div>
+                                <div className="text-heading-primary font-extrabold leading-snug">{p.title}</div>
                                 <div className="text-sm text-gray-200 mt-1 line-clamp-4">{p.content}</div>
                               </div>
                             </div>
@@ -228,30 +229,32 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           <div className="mt-5 grid grid-cols-3 gap-3">
             <div className="rounded-2xl border border-yellow-500/10 bg-neutral-900/70 p-4 text-center">
               <Heart className="w-8 h-8 mx-auto text-yellow-300" />
-              <div className="mt-1 text-yellow-200 font-extrabold text-lg">4.8</div>
-              <div className="text-[11px] text-yellow-200/80">Rating</div>
+              <div className="mt-1 text-heading-primary font-extrabold text-lg">4.8</div>
+              <div className="text-[11px] text-heading-secondary/90">Rating</div>
             </div>
 
             <div className="rounded-2xl border border-yellow-500/10 bg-neutral-900/70 p-4 text-center">
               <Pizza className="w-8 h-8 mx-auto text-yellow-300" />
-              <div className="mt-1 text-yellow-200 font-extrabold text-lg">500+</div>
-              <div className="text-[11px] text-yellow-200/80">Orders</div>
+              <div className="mt-1 text-heading-primary font-extrabold text-lg">500+</div>
+              <div className="text-[11px] text-heading-secondary/90">Orders</div>
             </div>
 
             <div className="rounded-2xl border border-yellow-500/10 bg-neutral-900/70 p-4 text-center">
               <Clock className="w-8 h-8 mx-auto text-yellow-300" />
-              <div className="mt-1 text-yellow-200 font-extrabold text-lg">Fast</div>
-              <div className="text-[11px] text-yellow-200/80">Delivery</div>
+              <div className="mt-1 text-heading-primary font-extrabold text-lg">Fast</div>
+              <div className="text-[11px] text-heading-secondary/90">Delivery</div>
             </div>
           </div>
 
           <HomeReelsSection className="mt-7" onNavigate={onNavigate} />
 
+          <HomeGallerySection className="mt-8" onNavigate={onNavigate} />
+
           {/* Our story */}
-          <div className="mt-7">
-            <div className="text-yellow-300 font-black text-3xl tracking-tight">OUR STORY</div>
-            <div className="mt-3 rounded-2xl border border-yellow-500/15 bg-neutral-900/60 p-4">
-              <div className="text-yellow-200 font-extrabold">Founded in 2023</div>
+          <div className="mt-9">
+            <div className="text-heading-primary font-black text-3xl tracking-tight">OUR STORY</div>
+            <div className="mt-3 rounded-2xl border border-yellow-500/15 bg-neutral-900/60 p-4 shadow-[0_12px_40px_rgba(0,0,0,0.25)]">
+              <div className="text-heading-secondary font-extrabold">Founded in 2023</div>
               <div className="text-gray-200 text-sm mt-2 leading-relaxed">
                 KaeDy&apos;s Pizza Hub has been serving not just pizzas, but comforting budget meals,
                 crispy chicken, and refreshing milk tea to our community. What started as a small family
@@ -265,14 +268,14 @@ export default function HomePage({ onNavigate }: HomePageProps) {
 
           {/* Why choose us */}
           <div className="mt-7">
-            <div className="text-yellow-300 font-black text-3xl tracking-tight">WHY CHOOSE US</div>
+            <div className="text-heading-primary font-black text-3xl tracking-tight">WHY CHOOSE US</div>
             <div className="mt-4 space-y-3">
               <div className="rounded-2xl border border-yellow-500/15 bg-neutral-900/60 p-4 flex items-start gap-3">
                 <div className="w-12 h-12 rounded-xl bg-yellow-500/10 border border-yellow-500/25 flex items-center justify-center">
                   <Pizza className="w-6 h-6 text-yellow-300" />
                 </div>
                 <div>
-                  <div className="text-yellow-200 font-extrabold">Fresh Ingredients</div>
+                  <div className="text-heading-secondary font-extrabold">Fresh Ingredients</div>
                   <div className="text-sm text-gray-200 mt-1">
                     We use only the freshest, highest-quality ingredients in every pizza
                   </div>
@@ -284,7 +287,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                   <Clock className="w-6 h-6 text-yellow-300" />
                 </div>
                 <div>
-                  <div className="text-yellow-200 font-extrabold">Fast Delivery</div>
+                  <div className="text-heading-secondary font-extrabold">Fast Delivery</div>
                   <div className="text-sm text-gray-200 mt-1">
                     Hot and fresh pizza delivered to your door in no time
                   </div>
@@ -296,7 +299,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                   <Heart className="w-6 h-6 text-yellow-300" />
                 </div>
                 <div>
-                  <div className="text-yellow-200 font-extrabold">Made with Love</div>
+                  <div className="text-heading-secondary font-extrabold">Made with Love</div>
                   <div className="text-sm text-gray-200 mt-1">
                     Every pizza is crafted with passion and care
                   </div>
@@ -318,7 +321,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           {marqueeText ? (
             <div className="absolute bottom-0 left-0 right-0 z-10 px-3 pb-4 pt-0 md:px-6 md:pb-6">
               <div className="mx-auto max-w-6xl overflow-hidden rounded-md border border-yellow-400/40 bg-black/75 backdrop-blur-sm">
-                <div className="marquee-track text-yellow-300 text-xs md:text-sm font-semibold py-2 whitespace-nowrap">
+                <div className="marquee-track text-heading-secondary text-xs md:text-sm font-semibold py-2 whitespace-nowrap">
                   <span className="pl-6 pr-24 md:pr-40">{marqueeText}</span>
                   <span className="pl-6 pr-24 md:pr-40" aria-hidden="true">
                     {marqueeText}
@@ -347,7 +350,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               <div className="w-10 h-10 rounded-full bg-yellow-500/15 border border-yellow-500/40 flex items-center justify-center">
                 <Megaphone className="w-5 h-5 text-yellow-300" />
               </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-yellow-300">
+              <h2 className="text-2xl md:text-3xl font-bold text-heading-primary">
                 Latest Announcements
               </h2>
             </div>
@@ -380,7 +383,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                           </span>
                         </div>
                         <div className="absolute bottom-0 left-0 right-0 p-5">
-                          <h3 className="text-xl font-bold text-yellow-200 mb-2 leading-tight drop-shadow-md">
+                          <h3 className="text-xl font-bold text-heading-primary mb-2 leading-tight drop-shadow-md">
                             {announcement.title}
                           </h3>
                           <p className="text-gray-100 leading-relaxed drop-shadow">
@@ -399,7 +402,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                         <div className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-yellow-500/15 text-yellow-200 border border-yellow-500/30 mb-3 ml-2">
                           Promo Update
                         </div>
-                        <h3 className="text-xl font-bold text-yellow-300 mb-2 leading-tight">
+                        <h3 className="text-xl font-bold text-heading-secondary mb-2 leading-tight">
                           {announcement.title}
                         </h3>
                         <p className="text-gray-200 leading-relaxed">
@@ -419,10 +422,11 @@ export default function HomePage({ onNavigate }: HomePageProps) {
 
         <div className="max-w-7xl mx-auto px-4 py-8">
           <HomeReelsSection onNavigate={onNavigate} />
+          <HomeGallerySection className="mt-10 max-w-4xl mx-auto" onNavigate={onNavigate} />
         </div>
 
         <div className="max-w-7xl mx-auto px-4 py-8">
-          <h2 className="text-3xl font-bold text-center mb-6 text-yellow-300">
+          <h2 className="text-3xl font-bold text-center mb-6 text-heading-primary">
             Why Choose Us?
           </h2>
           <div className="space-y-3">
@@ -430,7 +434,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               <div className="bg-yellow-500/10 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3">
                 <Pizza className="w-7 h-7 text-yellow-400" />
               </div>
-              <h3 className="text-lg font-bold mb-1 text-yellow-300">Fresh Ingredients</h3>
+              <h3 className="text-lg font-bold mb-1 text-heading-secondary">Fresh Ingredients</h3>
               <p className="text-sm text-gray-300">
                 We use only the freshest, highest-quality ingredients in every pizza
               </p>
@@ -440,7 +444,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               <div className="bg-yellow-500/10 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3">
                 <Clock className="w-7 h-7 text-yellow-400" />
               </div>
-              <h3 className="text-lg font-bold mb-1 text-yellow-300">Fast Delivery</h3>
+              <h3 className="text-lg font-bold mb-1 text-heading-secondary">Fast Delivery</h3>
               <p className="text-sm text-gray-300">
                 Hot and fresh pizza delivered to your door in no time
               </p>
@@ -450,7 +454,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               <div className="bg-yellow-500/10 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3">
                 <Heart className="w-7 h-7 text-yellow-400" />
               </div>
-              <h3 className="text-lg font-bold mb-1 text-yellow-300">Made with Love</h3>
+              <h3 className="text-lg font-bold mb-1 text-heading-secondary">Made with Love</h3>
               <p className="text-sm text-gray-300">
                 Every pizza is crafted with passion and care
               </p>

@@ -81,7 +81,7 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
               alt="KaeDy's Pizza Hub"
               className="h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full border-2 border-yellow-400 shadow-md object-cover"
             />
-            <span className="ml-2 sm:ml-3 text-sm sm:text-lg md:text-xl font-bold text-yellow-300 truncate md:overflow-visible md:whitespace-normal">
+            <span className="ml-2 sm:ml-3 text-sm sm:text-lg md:text-xl font-bold text-heading-primary truncate md:overflow-visible md:whitespace-normal">
               KaeDy's Pizza Hub
             </span>
           </div>
@@ -148,8 +148,20 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
             )}
           </div>
 
-          {/* Mobile: hamburger menu removed; bottom navigation handles navigation */}
-          <div className="md:hidden flex items-center space-x-3" />
+          {/* Mobile: log out next to brand (desktop keeps logout in top nav row) */}
+          <div className="md:hidden flex items-center shrink-0">
+            {user ? (
+              <button
+                type="button"
+                onClick={handleSignOutClick}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-yellow-500/45 bg-black/50 px-2.5 py-1.5 text-[11px] font-semibold text-yellow-300 hover:bg-yellow-500/10 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400/50"
+                aria-label="Log out"
+              >
+                <LogOut className="w-4 h-4 shrink-0" />
+                Log out
+              </button>
+            ) : null}
+          </div>
         </div>
       </div>
 
@@ -162,7 +174,7 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
             aria-label="Close menu"
           />
 
-          <div className="w-44 max-w-[58vw] bg-black border-l border-yellow-500/40 shadow-2xl">
+          <div className="w-44 max-w-[58vw] bg-black border-l border-yellow-500/40 shadow-2xl origin-right kae-animate-nav-drawer">
             <div className="h-full px-3 pt-3 pb-4 flex flex-col">
               <div className="space-y-1">
               {publicPages.map((page) => (
@@ -232,7 +244,7 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
           <div className="w-full max-w-sm rounded-2xl bg-neutral-950 border border-yellow-500/40 shadow-2xl">
             <div className="px-5 pt-5 pb-4">
-              <h2 className="text-lg font-semibold text-yellow-300 mb-2">
+              <h2 className="text-lg font-semibold text-heading-primary mb-2">
                 Sign out
               </h2>
               <p className="text-sm text-gray-200 mb-5">

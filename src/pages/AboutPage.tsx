@@ -19,7 +19,7 @@ export default function AboutPage() {
     <div className="min-h-screen bg-gradient-to-br from-black to-neutral-900 py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12 animate-fadeIn">
-          <h1 className="text-4xl md:text-5xl font-bold text-yellow-300 mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-heading-primary mb-4">
             About Us
           </h1>
         </div>
@@ -34,7 +34,7 @@ export default function AboutPage() {
               />
             </div>
             <div className="md:w-1/2">
-              <h2 className="text-3xl font-bold text-yellow-300 mb-4">
+              <h2 className="text-3xl font-bold text-heading-primary mb-4">
                 Our Story
               </h2>
               <p className="text-gray-300 mb-4">
@@ -56,7 +56,7 @@ export default function AboutPage() {
                 <Target className="w-6 h-6 text-yellow-400" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-lg font-bold mb-1 text-yellow-300">Our Mission</h3>
+                <h3 className="text-lg font-bold mb-1 text-heading-secondary">Our Mission</h3>
                 <p className="text-gray-300 text-sm leading-relaxed">
                   To deliver happiness through delicious, high-quality pizza made with love and the finest
                   ingredients.
@@ -69,7 +69,7 @@ export default function AboutPage() {
                 <Heart className="w-6 h-6 text-yellow-400" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-lg font-bold mb-1 text-yellow-300">Our Values</h3>
+                <h3 className="text-lg font-bold mb-1 text-heading-secondary">Our Values</h3>
                 <p className="text-gray-300 text-sm leading-relaxed">
                   Quality, customer satisfaction, and community are at the heart of everything we do.
                 </p>
@@ -81,7 +81,7 @@ export default function AboutPage() {
                 <Users className="w-6 h-6 text-yellow-400" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-lg font-bold mb-1 text-yellow-300">Our Team</h3>
+                <h3 className="text-lg font-bold mb-1 text-heading-secondary">Our Team</h3>
                 <p className="text-gray-300 text-sm leading-relaxed">
                   A dedicated team of passionate pizza makers committed to serving you the best pizza
                   experience.
@@ -94,7 +94,7 @@ export default function AboutPage() {
         </div>
 
         <div className="bg-neutral-900 rounded-xl shadow-lg p-8 border border-yellow-500/30">
-          <h2 className="text-2xl font-bold text-yellow-300 mb-4 text-center">
+          <h2 className="text-2xl font-bold text-heading-secondary mb-4 text-center">
             Visit Our Store
           </h2>
           <div className="bg-black/40 rounded-lg p-6">

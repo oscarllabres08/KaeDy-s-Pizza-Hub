@@ -331,7 +331,7 @@ export default function GamePage({ onNavigate }: GamePageProps) {
           <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-amber-500/25 to-yellow-600/15 border border-yellow-500/30 shadow-lg shadow-amber-900/40">
             <Calculator className="w-12 h-12 text-yellow-300" />
           </div>
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-yellow-200 to-amber-300 bg-clip-text text-transparent mb-4">
+          <h2 className="text-2xl font-bold text-heading-primary mb-4">
             Please sign in to play
           </h2>
           <button
@@ -351,7 +351,7 @@ export default function GamePage({ onNavigate }: GamePageProps) {
         <GameRadiantBackdrop />
         <div className="text-center relative z-[1]">
           <Calculator className="w-24 h-24 text-yellow-500/35 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-yellow-200/90 mb-4">Game is currently disabled</h2>
+          <h2 className="text-2xl font-bold text-heading-secondary mb-4">Game is currently disabled</h2>
           <p className="text-neutral-400">Check back later!</p>
         </div>
       </div>
@@ -383,7 +383,7 @@ export default function GamePage({ onNavigate }: GamePageProps) {
               MULTIPLICATION CHALLENGE
             </span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-black mb-2 tracking-tight bg-gradient-to-r from-yellow-300 via-amber-200 to-yellow-400 bg-clip-text text-transparent drop-shadow-sm">
+          <h1 className="text-3xl md:text-4xl font-black mb-2 tracking-tight text-heading-primary drop-shadow-sm">
             Math Challenge
           </h1>
           <p className="text-sm md:text-base text-gray-200/90 leading-relaxed">
@@ -401,7 +401,7 @@ export default function GamePage({ onNavigate }: GamePageProps) {
               >
                 <Calculator className="w-10 h-10 text-amber-200" />
               </div>
-              <h2 className="text-2xl font-black mb-2 tracking-tight bg-gradient-to-r from-yellow-200 to-amber-300 bg-clip-text text-transparent">
+              <h2 className="text-2xl font-black mb-2 tracking-tight text-heading-secondary">
                 Choose difficulty
               </h2>
 
@@ -441,7 +441,7 @@ export default function GamePage({ onNavigate }: GamePageProps) {
               <div className="mx-auto mb-6 w-20 h-20 rounded-3xl bg-gradient-to-br from-orange-400/30 to-rose-500/25 border border-orange-400/30 flex items-center justify-center shadow-lg shadow-orange-500/20">
                 <Timer className="w-10 h-10 text-orange-200" />
               </div>
-              <h2 className="text-2xl md:text-3xl font-black mb-2 tracking-tight bg-gradient-to-r from-orange-300 to-rose-300 bg-clip-text text-transparent">
+              <h2 className="text-2xl md:text-3xl font-black mb-2 tracking-tight text-heading-primary">
                 Get ready!
               </h2>
               <p className="text-sm text-gray-200 mb-6 leading-relaxed">
@@ -458,7 +458,7 @@ export default function GamePage({ onNavigate }: GamePageProps) {
               </p>
 
               <div className="rounded-2xl border border-yellow-500/25 bg-gradient-to-br from-neutral-950/80 to-amber-950/25 p-5 text-left max-w-md mx-auto">
-                <p className="text-yellow-200 font-extrabold mb-3">How it works</p>
+                <p className="text-heading-secondary font-extrabold mb-3">How it works</p>
                 <div className="grid gap-2 text-sm text-gray-200">
                   <div className="flex items-start gap-2">
                     <span className="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
@@ -596,7 +596,7 @@ export default function GamePage({ onNavigate }: GamePageProps) {
                 className={`text-2xl md:text-3xl font-black mb-2 tracking-tight ${
                   endReason === 'wrong'
                     ? 'text-rose-400'
-                    : 'bg-gradient-to-r from-yellow-300 to-amber-300 bg-clip-text text-transparent'
+                    : 'text-heading-primary'
                 }`}
               >
                 {endReason === 'wrong' ? 'Game Over!' : 'Time’s up!'}

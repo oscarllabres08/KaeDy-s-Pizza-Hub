@@ -167,8 +167,8 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black to-neutral-900 py-8 px-4">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center gap-3 mb-6 animate-menuReveal motion-reduce:animate-none">
-          <h1 className="text-2xl md:text-3xl font-bold text-yellow-300 shrink-0 tracking-tight">
+        <div className="flex items-center gap-3 mb-6 kae-animate-menu-reveal">
+          <h1 className="text-2xl md:text-3xl font-bold text-heading-primary shrink-0 tracking-tight">
             Menu
           </h1>
           <div className="flex-1 flex justify-end min-w-0">
@@ -222,7 +222,7 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
           </div>
         </div>
 
-        <div className="mb-6 overflow-x-auto animate-menuReveal [animation-delay:85ms] motion-reduce:animate-none">
+        <div className="mb-6 overflow-x-auto kae-animate-menu-reveal [animation-delay:85ms]">
           <div className="flex gap-2 pb-2 min-w-max">
             {categories.map((category) => (
               <button
@@ -242,7 +242,7 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
           </div>
         </div>
         {subcategoryOptions.length > 0 && (
-          <div className="mb-6 overflow-x-auto animate-menuReveal [animation-delay:130ms] motion-reduce:animate-none">
+          <div className="mb-6 overflow-x-auto kae-animate-menu-reveal [animation-delay:130ms]">
             <div className="flex gap-3 pb-2 min-w-max">
               <button
                 type="button"
@@ -299,7 +299,7 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
                     }
                   }}
                   aria-label={`View details: ${item.name}`}
-                  className="group bg-neutral-900 rounded-lg shadow-md overflow-hidden border border-yellow-500/20 flex flex-col h-full cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950 animate-menuCardIn motion-reduce:animate-none"
+                  className="group bg-neutral-900 rounded-lg shadow-md overflow-hidden border border-yellow-500/20 flex flex-col h-full cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950 kae-animate-menu-card"
                   style={{ animationDelay: `${Math.min(index, 24) * 42}ms` }}
                 >
                   <div className="w-full shrink-0 pointer-events-none">
@@ -322,7 +322,7 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
                     </div>
                   </div>
                   <div className="p-2 flex-1 flex flex-col min-h-0">
-                    <h3 className="text-xs sm:text-sm font-bold text-yellow-300 mb-0.5 leading-tight line-clamp-2">
+                    <h3 className="text-xs sm:text-sm font-bold text-heading-secondary mb-0.5 leading-tight line-clamp-2">
                       {item.name}
                     </h3>
                     <p className="text-[10px] text-gray-400 mb-1 leading-tight line-clamp-1 shrink-0">
@@ -410,8 +410,8 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
           </div>
         )}
         {previewItem && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4 animate-menuBackdrop motion-reduce:animate-none">
-            <div className="bg-neutral-900 rounded-2xl max-w-md w-full overflow-hidden border border-yellow-500/40 animate-menuModal motion-reduce:animate-none">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4 kae-animate-menu-backdrop">
+            <div className="bg-neutral-900 rounded-2xl max-w-md w-full overflow-hidden border border-yellow-500/40 kae-animate-menu-modal">
               <div className="relative w-full bg-black/60" style={{ paddingTop: '100%' }}>
                 <img
                   src={previewItem.image_url}
@@ -428,7 +428,7 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
               </div>
               <div className="p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-lg font-bold text-yellow-300">
+                  <h3 className="text-lg font-bold text-heading-secondary">
                     {previewItem.name}
                   </h3>
                   <span className="bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-semibold">

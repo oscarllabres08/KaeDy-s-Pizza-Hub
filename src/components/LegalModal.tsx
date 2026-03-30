@@ -61,7 +61,7 @@ export function LegalModal({ open, onClose, title, description, children }: Lega
       >
         <div className="overflow-hidden rounded-2xl border border-yellow-500/35 bg-neutral-950 shadow-2xl">
           <div className="p-5 md:p-6">
-            <h3 id="legal-modal-title" className="text-xl font-bold text-yellow-300">
+            <h3 id="legal-modal-title" className="text-xl font-bold text-heading-primary">
               {title}
             </h3>
             {description ? <div className="mt-1">{description}</div> : null}

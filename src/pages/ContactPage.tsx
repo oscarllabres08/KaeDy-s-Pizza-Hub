@@ -71,7 +71,7 @@ export default function ContactPage() {
     <div className="min-h-screen bg-gradient-to-br from-black to-neutral-900 py-8 px-4">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-6 animate-fadeIn">
-          <h1 className="text-3xl md:text-4xl font-bold text-yellow-300 mb-2">
+          <h1 className="text-3xl md:text-4xl font-bold text-heading-primary mb-2">
             Contact Us
           </h1>
           <p className="text-base md:text-lg text-gray-300">
@@ -83,7 +83,7 @@ export default function ContactPage() {
           <section className="bg-neutral-900/60 rounded-2xl border border-yellow-500/20 shadow-lg p-5 md:p-6">
             <div className="flex items-end justify-between gap-4 mb-4">
               <div>
-                <h2 className="text-lg font-semibold text-yellow-300">Quick contacts</h2>
+                <h2 className="text-lg font-semibold text-heading-secondary">Quick contacts</h2>
                 <p className="text-sm text-gray-300">Tap a card to open.</p>
               </div>
             </div>
@@ -97,7 +97,7 @@ export default function ContactPage() {
                       {c.icon}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-yellow-300 leading-tight">
+                      <p className="text-sm font-semibold text-heading-secondary leading-tight">
                         {c.title}
                       </p>
                       <p

@@ -319,7 +319,7 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
         <div className="min-h-screen bg-gradient-to-br from-black to-neutral-900 py-16 px-4 flex items-center justify-center">
           <div className="text-center">
             <ShoppingBag className="w-24 h-24 text-yellow-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-yellow-300 mb-4">
+            <h2 className="text-2xl font-bold text-heading-primary mb-4">
               Please sign in to view your cart
             </h2>
             <button
@@ -342,7 +342,7 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
         <div className="min-h-screen bg-gradient-to-br from-black to-neutral-900 py-16 px-4 flex items-center justify-center">
           <div className="text-center max-w-md space-y-4">
             <ShoppingBag className="w-24 h-24 text-yellow-400 mx-auto mb-2" />
-            <h2 className="text-2xl font-bold text-yellow-300">Buy Now checkout</h2>
+            <h2 className="text-2xl font-bold text-heading-primary">Buy Now checkout</h2>
             <p className="text-sm text-gray-400">
               This page is for orders started with <span className="text-yellow-200 font-semibold">Buy Now</span> from
               the menu. Your saved cart is separate and unchanged.
@@ -376,7 +376,7 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
         <div className="min-h-screen bg-gradient-to-br from-black to-neutral-900 py-16 px-4 flex items-center justify-center">
           <div className="text-center">
             <ShoppingBag className="w-24 h-24 text-yellow-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-yellow-300 mb-4">Your cart is empty</h2>
+            <h2 className="text-2xl font-bold text-heading-primary mb-4">Your cart is empty</h2>
             <button
               onClick={() => onNavigate('menu')}
               className="bg-yellow-400 text-black px-8 py-3 rounded-lg font-semibold hover:bg-yellow-300 transition-all"
@@ -396,7 +396,7 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
         <div className="min-h-screen bg-gradient-to-br from-black to-neutral-900 py-16 px-4 flex items-center justify-center">
           <div className="text-center max-w-md space-y-4">
             <ShoppingBag className="w-24 h-24 text-yellow-400 mx-auto mb-2" />
-            <h2 className="text-2xl font-bold text-yellow-300">Your cart is empty</h2>
+            <h2 className="text-2xl font-bold text-heading-primary">Your cart is empty</h2>
             <p className="text-sm text-gray-400">
               You still have a <span className="text-yellow-200 font-semibold">Buy Now</span> order in progress (separate
               from this cart).
@@ -429,7 +429,7 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
         <div className="min-h-screen bg-gradient-to-br from-black to-neutral-900 py-8 px-4">
           <div className="max-w-4xl mx-auto">
             <div className="mb-6">
-              <h1 className="text-3xl font-bold text-yellow-300">Buy Now — Review</h1>
+              <h1 className="text-3xl font-bold text-heading-primary">Buy Now — Review</h1>
               <p className="text-sm text-gray-400 mt-1">
                 Adjust quantity, then continue. Your saved cart is unchanged.
               </p>
@@ -447,7 +447,7 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <h3 className="text-sm font-semibold leading-tight text-yellow-300 line-clamp-2">
+                          <h3 className="text-sm font-semibold leading-tight text-heading-secondary line-clamp-2">
                             {item.name}
                           </h3>
                           <p className="mt-0.5 text-[10px] text-gray-500 sm:text-[11px]">
@@ -487,10 +487,10 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
 
             <div className="rounded-xl border border-yellow-500/25 bg-neutral-900/80 p-3 shadow-lg sm:p-4">
               <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-base font-bold text-yellow-300">Order Summary</h2>
+                <h2 className="text-base font-bold text-heading-secondary">Order Summary</h2>
                 <span className="text-[11px] text-gray-400">{buyNowItems.length} item(s)</span>
               </div>
-              <div className="flex justify-between border-t border-yellow-500/20 pt-2 text-base font-bold text-yellow-300">
+              <div className="flex justify-between border-t border-yellow-500/20 pt-2 text-base font-bold text-heading-primary">
                 <span>Total</span>
                 <span className="tabular-nums text-white">₱{buyNowTotal.toFixed(2)}</span>
               </div>
@@ -528,7 +528,7 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
           <div className="max-w-2xl mx-auto">
             <div className="bg-neutral-900 rounded-xl shadow-lg p-6 border border-yellow-500/30">
               <div className="mb-6">
-                <h2 className="text-2xl font-bold text-yellow-300">
+                <h2 className="text-2xl font-bold text-heading-primary">
                   {showBuyNowDeliveryForm ? 'Buy Now — Checkout' : 'Checkout'}
                 </h2>
                 {showBuyNowDeliveryForm && (
@@ -539,7 +539,7 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
               </div>
 
             <div className="mb-6">
-              <h3 className="font-semibold text-yellow-300 mb-2">Delivery Information</h3>
+              <h3 className="font-semibold text-heading-secondary mb-2">Delivery Information</h3>
               <p className="text-xs text-gray-400 mb-3">
                 Please fill out all delivery details. For address, include your complete address:
                 Zone, Street, Barangay, City, and Province.
@@ -712,7 +712,7 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
             {paymentMethod !== 'COD' && (
               <div className="mb-6 p-4 bg-black/40 rounded-xl border border-yellow-500/30">
                 <div className="text-center mb-4">
-                  <p className="font-semibold text-yellow-300 mb-2">
+                  <p className="font-semibold text-heading-secondary mb-2">
                     {paymentMethod} - Scan QR Code to Pay
                   </p>
                   <div className="bg-black/60 p-4 rounded-xl inline-block border border-white/10">
@@ -816,7 +816,7 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
                   <span className="font-semibold">-₱{checkoutDiscountAmount.toFixed(2)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-xl font-bold text-yellow-300 pt-2 border-t border-yellow-500/30">
+              <div className="flex justify-between text-xl font-bold text-heading-primary pt-2 border-t border-yellow-500/30">
                 <span>Total:</span>
                 <span className="text-white">₱{checkoutFinalTotal.toFixed(2)}</span>
               </div>
@@ -856,7 +856,7 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
       <div className="min-h-screen bg-gradient-to-br from-black to-neutral-900 py-8 px-4">
         <div className="max-w-4xl mx-auto">
           <div className="mb-4">
-            <h1 className="text-2xl sm:text-3xl font-bold text-yellow-300">Your Cart</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-heading-primary">Your Cart</h1>
             <p className="text-xs text-gray-400 mt-0.5">Review your items before checkout.</p>
           </div>
 
@@ -899,7 +899,7 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <h3 className="text-sm font-semibold leading-tight text-yellow-300 line-clamp-2">
+                      <h3 className="text-sm font-semibold leading-tight text-heading-secondary line-clamp-2">
                         {item.name}
                       </h3>
                       <p className="mt-0.5 text-[10px] text-gray-500 sm:text-[11px]">
@@ -949,7 +949,7 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
 
         <div className="rounded-xl border border-yellow-500/25 bg-neutral-900/80 p-3 shadow-lg sm:p-4">
           <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-base font-bold text-yellow-300">Order Summary</h2>
+            <h2 className="text-base font-bold text-heading-secondary">Order Summary</h2>
             <span className="text-[11px] text-gray-400">{cart.length} item(s)</span>
           </div>
 
@@ -965,7 +965,7 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
               </div>
             )}
             <div className="mt-2 flex justify-between border-t border-yellow-500/20 pt-2 text-base font-bold">
-              <span className="text-yellow-300">Total</span>
+              <span className="text-heading-secondary">Total</span>
               <span className="tabular-nums text-white">₱{finalTotal.toFixed(2)}</span>
             </div>
           </div>
