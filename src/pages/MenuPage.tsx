@@ -45,8 +45,15 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
     loadMenu();
   }, []);
 
+  const maxSelectableQty = (item: MenuItem) => {
+    if (!item.track_stock) return 99;
+    return Math.max(0, item.stock_quantity ?? 0);
+  };
+
   const isItemAvailable = (item: MenuItem) => {
-    return item.is_available;
+    if (!item.is_available) return false;
+    if (item.track_stock && (item.stock_quantity ?? 0) <= 0) return false;
+    return true;
   };
 
   const normalizeLabel = (value: string) => value.trim().toLowerCase();
@@ -165,10 +172,10 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black to-neutral-900 py-8 px-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-black to-neutral-900 py-8 px-4 lg:animate-pageEnterLg motion-reduce:lg:animate-none">
+      <div className="max-w-7xl mx-auto lg:max-w-[88rem]">
         <div className="flex items-center gap-3 mb-6 kae-animate-menu-reveal">
-          <h1 className="text-2xl md:text-3xl font-bold text-heading-primary shrink-0 tracking-tight">
+          <h1 className="text-2xl md:text-3xl font-bold text-yellow-300 shrink-0 tracking-tight">
             Menu
           </h1>
           <div className="flex-1 flex justify-end min-w-0">
@@ -182,10 +189,7 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
             >
               {searchExpanded ? (
                 <>
-                  <Search
-                    className="w-5 h-5 text-yellow-400 shrink-0 mr-2"
-                    aria-hidden
-                  />
+                  <Search className="w-5 h-5 text-yellow-400 shrink-0 mr-2" aria-hidden />
                   <input
                     ref={searchInputRef}
                     type="search"
@@ -223,14 +227,14 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
         </div>
 
         <div className="mb-6 overflow-x-auto kae-animate-menu-reveal [animation-delay:85ms]">
-          <div className="flex gap-2 pb-2 min-w-max">
+          <div className="flex gap-3 pb-2 min-w-max">
             {categories.map((category) => (
               <button
                 key={category}
                 onClick={() => {
                   setSelectedCategory(category);
                 }}
-                className={`px-4 py-1.5 rounded-lg font-semibold text-xs sm:text-sm flex-none transition-all duration-300 ease-out ${
+                className={`px-5 py-2 rounded-lg font-semibold text-sm flex-none transition-all duration-300 ease-out ${
                   selectedCategory === category
                     ? 'bg-yellow-400 text-black shadow-md ring-2 ring-yellow-400/50 scale-[1.02]'
                     : 'bg-neutral-800 text-gray-200 hover:bg-neutral-700 hover:scale-[1.02] active:scale-95'
@@ -280,7 +284,7 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
         ) : (
           <div
             key={`${selectedCategory}-${selectedSubcategory}`}
-            className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 items-stretch"
+            className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 lg:gap-8 items-stretch"
           >
             {filteredItems.map((item, index) => {
               const available = isItemAvailable(item);
@@ -299,11 +303,11 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
                     }
                   }}
                   aria-label={`View details: ${item.name}`}
-                  className="group bg-neutral-900 rounded-lg shadow-md overflow-hidden border border-yellow-500/20 flex flex-col h-full cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950 kae-animate-menu-card"
+                  className="group bg-neutral-900 rounded-lg shadow-md overflow-hidden border border-yellow-500/20 flex flex-col h-full cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950 kae-animate-menu-card lg:rounded-xl lg:border-yellow-500/25 lg:shadow-lg lg:transition-[transform,box-shadow,border-color] lg:duration-300 lg:ease-out lg:hover:-translate-y-1 lg:hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.65),0_0_0_1px_rgba(234,179,8,0.15)] lg:hover:border-yellow-400/35 lg:will-change-transform"
                   style={{ animationDelay: `${Math.min(index, 24) * 42}ms` }}
                 >
                   <div className="w-full shrink-0 pointer-events-none">
-                    <div className="relative w-full aspect-[4/3] overflow-hidden">
+                    <div className="relative w-full aspect-[5/4] overflow-hidden">
                       <img
                         src={item.image_url}
                         alt=""
@@ -315,14 +319,14 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
                       {!available && (
                         <div className="absolute inset-0 bg-black/65 flex items-center justify-center">
                           <span className="px-3 py-1 rounded-full text-[11px] font-semibold bg-gray-200 text-gray-800">
-                            Not available today
+                            {!item.is_available ? 'Not available today' : 'Out of stock'}
                           </span>
                         </div>
                       )}
                     </div>
                   </div>
-                  <div className="p-2 flex-1 flex flex-col min-h-0">
-                    <h3 className="text-xs sm:text-sm font-bold text-heading-secondary mb-0.5 leading-tight line-clamp-2">
+                  <div className="p-2 flex-1 flex flex-col min-h-0 lg:p-3.5">
+                    <h3 className="text-xs sm:text-sm font-bold text-yellow-300 mb-0.5 leading-tight line-clamp-2">
                       {item.name}
                     </h3>
                     <p className="text-[10px] text-gray-400 mb-1 leading-tight line-clamp-1 shrink-0">
@@ -364,7 +368,10 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
                               onClick={() =>
                                 setQuantities((prev) => ({
                                   ...prev,
-                                  [item.id]: Math.min(99, (prev[item.id] ?? 1) + 1),
+                                  [item.id]: Math.min(
+                                    maxSelectableQty(item),
+                                    (prev[item.id] ?? 1) + 1
+                                  ),
                                 }))
                               }
                               className="w-5 h-5 flex items-center justify-center rounded-full bg-neutral-900 text-yellow-300 hover:bg-neutral-800 text-[10px]"
@@ -374,14 +381,14 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
                           </div>
                         </div>
                         <div
-                          className="flex gap-1.5 pointer-events-auto"
+                          className="flex gap-2 pointer-events-auto lg:gap-2.5"
                           onClick={(e) => e.stopPropagation()}
                           onKeyDown={(e) => e.stopPropagation()}
                         >
                           <button
                             type="button"
                             onClick={() => handleAddToCart(item)}
-                            className={`flex-1 min-h-[1.85rem] sm:min-h-[2rem] rounded-md text-[10px] sm:text-[11px] font-semibold transition-all px-1.5 py-0.5 leading-tight text-center whitespace-normal line-clamp-2 ${
+                            className={`flex-1 rounded-md text-xs sm:text-sm font-semibold transition-all duration-300 px-2.5 py-1.5 leading-tight text-center whitespace-normal line-clamp-2 lg:py-2 lg:hover:scale-[1.02] lg:hover:shadow-[0_8px_24px_rgba(250,204,21,0.25)] lg:active:scale-100 ${
                               addedItems.has(item.id)
                                 ? 'bg-green-500 text-white'
                                 : 'bg-yellow-400 text-black hover:bg-yellow-300'
@@ -392,7 +399,7 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
                           <button
                             type="button"
                             onClick={() => handleBuyNow(item)}
-                            className="flex-1 min-h-[1.85rem] sm:min-h-[2rem] rounded-md text-[10px] sm:text-[11px] font-semibold border border-yellow-400 text-yellow-300 hover:bg-yellow-400/10 transition-all px-1.5 py-0.5 leading-tight text-center whitespace-nowrap"
+                            className="flex-1 rounded-md text-xs sm:text-sm font-semibold border border-yellow-400 text-yellow-300 hover:bg-yellow-400/10 transition-all duration-300 px-2 py-1.5 leading-tight text-center whitespace-normal line-clamp-2 lg:py-2 lg:hover:scale-[1.02] lg:hover:border-yellow-300/80 lg:hover:shadow-[0_0_24px_rgba(234,179,8,0.12)] lg:active:scale-100"
                           >
                             Buy Now
                           </button>
@@ -428,7 +435,7 @@ export default function MenuPage({ onNavigate }: MenuPageProps) {
               </div>
               <div className="p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-lg font-bold text-heading-secondary">
+                  <h3 className="text-lg font-bold text-yellow-300">
                     {previewItem.name}
                   </h3>
                   <span className="bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-semibold">
