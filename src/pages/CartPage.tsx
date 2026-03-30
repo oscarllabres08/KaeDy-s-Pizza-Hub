@@ -4,6 +4,7 @@ import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useBuyNow } from '../contexts/BuyNowContext';
 import { supabase } from '../lib/supabase';
+import { compressImageBeforeUpload } from '../lib/compressImage';
 
 type CartPageProps = {
   onNavigate: (page: string) => void;
@@ -24,7 +25,7 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
     clearCart,
   } = useCart();
   const { buyNowItems, buyNowTotal, updateBuyNowQuantity, clearBuyNow } = useBuyNow();
-  const { user, customerProfile } = useAuth();
+  const { user, customerProfile, refreshProfiles } = useAuth();
   // Cart: "Proceed to Checkout" opens delivery form. Buy Now (#checkout): review → Proceed → delivery form.
   const [showCheckout, setShowCheckout] = useState(false);
   const [buyNowCheckoutStep, setBuyNowCheckoutStep] = useState<'review' | 'details'>('review');
@@ -40,6 +41,7 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
     PayPal: { qrSrc: null, accountNumber: null, accountName: null },
   });
   const [notes, setNotes] = useState('');
+  const [usePesoWallet, setUsePesoWallet] = useState(false);
   const [deliveryName, setDeliveryName] = useState('');
   const [deliveryPhone, setDeliveryPhone] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
@@ -195,6 +197,14 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
     setDeliveryEmail(user?.email || '');
   }, [deliveryFormVisible, customerProfile, user?.email]);
 
+  useEffect(() => {
+    if (!deliveryFormVisible) setUsePesoWallet(false);
+  }, [deliveryFormVisible]);
+
+  useEffect(() => {
+    if (Number(customerProfile?.peso_balance ?? 0) <= 0) setUsePesoWallet(false);
+  }, [customerProfile?.peso_balance]);
+
   /** Line items for place order — cart checkout uses cart only; Buy Now delivery uses buyNow only */
   const checkoutLineItems = showBuyNowDeliveryForm
     ? buyNowItems!
@@ -203,8 +213,15 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
       : [];
   const checkoutSubtotal = showBuyNowDeliveryForm ? buyNowTotal : isCartCheckoutForm ? cartTotal : 0;
   const checkoutDiscountPercent = showBuyNowDeliveryForm ? 0 : discountPercent;
-  const checkoutDiscountAmount = showBuyNowDeliveryForm ? 0 : discountAmount;
-  const checkoutFinalTotal = showBuyNowDeliveryForm ? buyNowTotal : isCartCheckoutForm ? finalTotal : 0;
+  const checkoutPromoDiscount = showBuyNowDeliveryForm ? 0 : discountAmount;
+  const pesoBal = Number(customerProfile?.peso_balance ?? 0);
+  const afterPromo = Math.max(0, checkoutSubtotal - checkoutPromoDiscount);
+  const maxWalletDiscount =
+    deliveryFormVisible && checkoutSubtotal > 0 ? Math.min(pesoBal, afterPromo) : 0;
+  const walletDiscountApplied =
+    deliveryFormVisible && usePesoWallet && maxWalletDiscount > 0 ? maxWalletDiscount : 0;
+  const checkoutTotalDiscount = checkoutPromoDiscount + walletDiscountApplied;
+  const checkoutFinalTotal = Math.max(0, checkoutSubtotal - checkoutTotalDiscount);
 
   const showCheckoutForm = showBuyNowDeliveryForm || isCartCheckoutForm;
 
@@ -244,11 +261,18 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
       let paymentProofUrl = null;
 
       if (paymentProof) {
-        const fileExt = paymentProof.name.split('.').pop();
+        const compressed = await compressImageBeforeUpload(paymentProof, {
+          maxWidth: 1600,
+          maxHeight: 1600,
+          maxBytes: 450 * 1024,
+          quality: 0.8,
+          force: true,
+        });
+        const fileExt = compressed.name.split('.').pop() || 'webp';
         const fileName = `${user.id}-${Date.now()}.${fileExt}`;
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('payment-proofs')
-          .upload(fileName, paymentProof);
+          .upload(fileName, compressed);
 
         if (uploadError) throw uploadError;
 
@@ -259,8 +283,13 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
         paymentProofUrl = urlData.publicUrl;
       }
 
+      const walletNote =
+        walletDiscountApplied > 0
+          ? `[Peso wallet discount applied: ₱${walletDiscountApplied.toFixed(2)}]\n\n`
+          : '';
       const notesPayload =
         (notes ? `${notes.trim()}\n\n` : '') +
+        walletNote +
         `Customer: ${deliveryName.trim()}\nEmail: ${deliveryEmail.trim()}`;
 
       const pItems = checkoutLineItems.map((item) => ({
@@ -275,7 +304,7 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
       // but failing on a second request (user sees error while order exists in admin).
       const { data: orderId, error: placeError } = await supabase.rpc('place_customer_order', {
         p_total_amount: checkoutSubtotal,
-        p_discount_amount: checkoutDiscountAmount,
+        p_discount_amount: checkoutTotalDiscount,
         p_final_amount: checkoutFinalTotal,
         p_payment_method: paymentMethod,
         p_payment_reference: paymentReference?.trim() || null,
@@ -284,6 +313,7 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
         p_contact_phone: deliveryPhone.trim(),
         p_notes: notesPayload,
         p_items: pItems,
+        p_wallet_discount: walletDiscountApplied,
       });
 
       if (placeError) throw placeError;
@@ -294,6 +324,7 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
       } else {
         clearCart();
       }
+      await refreshProfiles();
       openModal({
         title: 'Order Placed',
         message: 'Order placed successfully! We will notify you once confirmed.',
@@ -789,6 +820,26 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
               />
             </div>
 
+            {deliveryFormVisible && pesoBal > 0 && (
+              <div className="mb-6 p-4 rounded-xl border border-emerald-500/30 bg-emerald-950/25">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={usePesoWallet}
+                    onChange={(e) => setUsePesoWallet(e.target.checked)}
+                    className="mt-1 h-4 w-4 accent-emerald-400 shrink-0"
+                  />
+                  <span className="min-w-0">
+                    <span className="font-semibold text-emerald-200">Use peso wallet balance</span>
+                    <span className="block text-xs text-gray-400 mt-1 leading-relaxed">
+                      Wallet: ₱{pesoBal.toFixed(2)} · You can apply up to ₱{maxWalletDiscount.toFixed(2)} on this order
+                      (after promo). 50 game points = ₱1 — redeem points on your profile.
+                    </span>
+                  </span>
+                </label>
+              </div>
+            )}
+
             <div className="mb-6 p-4 bg-black/40 rounded-lg">
               <p className="text-sm font-semibold text-gray-200 mb-3">Order Summary</p>
               <div className="space-y-2 mb-4">
@@ -813,7 +864,13 @@ export default function CartPage({ onNavigate, startInCheckout = false }: CartPa
               {checkoutDiscountPercent > 0 && (
                 <div className="flex justify-between mb-2 text-green-400">
                   <span>Discount ({checkoutDiscountPercent.toFixed(0)}%):</span>
-                  <span className="font-semibold">-₱{checkoutDiscountAmount.toFixed(2)}</span>
+                  <span className="font-semibold">-₱{checkoutPromoDiscount.toFixed(2)}</span>
+                </div>
+              )}
+              {walletDiscountApplied > 0 && (
+                <div className="flex justify-between mb-2 text-emerald-300/95">
+                  <span>Peso wallet discount:</span>
+                  <span className="font-semibold">-₱{walletDiscountApplied.toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between text-xl font-bold text-heading-primary pt-2 border-t border-yellow-500/30">

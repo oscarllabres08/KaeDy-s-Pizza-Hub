@@ -112,8 +112,10 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           <div className="mt-4 relative rounded-2xl border border-yellow-500/30 bg-black/60 shadow-[0_20px_60px_rgba(0,0,0,0.5)] overflow-hidden">
             <div className="flex items-center justify-between gap-2 px-4 pt-4">
               <div className="flex items-center gap-2 min-w-0">
-                <span className="inline-flex items-center justify-center w-3 h-3 shrink-0 rounded-full bg-green-400/20 border border-green-400/30" />
-                <span className="text-xs font-bold text-heading-secondary">ACTIVE • PROMO UPDATE</span>
+                <span className="inline-flex items-center justify-center w-3 h-3 shrink-0 rounded-full bg-green-400 border border-green-200 shadow-[0_0_0_3px_rgba(34,197,94,0.18)]" />
+                <span className="text-xs font-black text-green-200 drop-shadow-[0_1px_1px_rgba(0,0,0,0.75)]">
+                  ACTIVE • PROMO UPDATE
+                </span>
               </div>
               {nCardPromos > 1 ? (
                 <div className="flex items-center gap-1.5 shrink-0 text-heading-secondary/90">
@@ -250,24 +252,8 @@ export default function HomePage({ onNavigate }: HomePageProps) {
 
           <HomeGallerySection className="mt-8" onNavigate={onNavigate} />
 
-          {/* Our story */}
+          {/* Why choose us (first on mobile) */}
           <div className="mt-9">
-            <div className="text-heading-primary font-black text-3xl tracking-tight">OUR STORY</div>
-            <div className="mt-3 rounded-2xl border border-yellow-500/15 bg-neutral-900/60 p-4 shadow-[0_12px_40px_rgba(0,0,0,0.25)]">
-              <div className="text-heading-secondary font-extrabold">Founded in 2023</div>
-              <div className="text-gray-200 text-sm mt-2 leading-relaxed">
-                KaeDy&apos;s Pizza Hub has been serving not just pizzas, but comforting budget meals,
-                crispy chicken, and refreshing milk tea to our community. What started as a small family
-                business has grown into a beloved local favorite.
-              </div>
-              <div className="text-gray-200 text-sm mt-3 leading-relaxed">
-                We believe in using only the freshest ingredients and recipes crafted with care. Every order is made with love to keep you full and satisfied.
-              </div>
-            </div>
-          </div>
-
-          {/* Why choose us */}
-          <div className="mt-7">
             <div className="text-heading-primary font-black text-3xl tracking-tight">WHY CHOOSE US</div>
             <div className="mt-4 space-y-3">
               <div className="rounded-2xl border border-yellow-500/15 bg-neutral-900/60 p-4 flex items-start gap-3">
@@ -304,6 +290,64 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                     Every pizza is crafted with passion and care
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Our story */}
+          <div className="mt-7">
+            <div className="text-heading-primary font-black text-3xl tracking-tight">OUR STORY</div>
+            <div className="mt-3 rounded-2xl border border-yellow-500/15 bg-neutral-900/60 p-4 shadow-[0_12px_40px_rgba(0,0,0,0.25)]">
+              <div className="text-heading-secondary font-extrabold">Founded in 2023</div>
+              <div className="text-gray-200 text-sm mt-2 leading-relaxed">
+                KaeDy&apos;s Pizza Hub has been serving not just pizzas, but comforting budget meals,
+                crispy chicken, and refreshing milk tea to our community. What started as a small family
+                business has grown into a beloved local favorite.
+              </div>
+              <div className="text-gray-200 text-sm mt-3 leading-relaxed">
+                We believe in using only the freshest ingredients and recipes crafted with care. Every order is made with love to keep you full and satisfied.
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-7">
+            <div className="text-heading-primary font-black text-3xl tracking-tight">STORE</div>
+            <div className="mt-3 rounded-2xl border border-yellow-500/15 bg-neutral-900/60 p-3 shadow-[0_12px_40px_rgba(0,0,0,0.25)] overflow-hidden">
+              <img
+                src="/assets/store1.jpg"
+                alt="KaeDy's Pizza Hub physical store"
+                className="w-full h-auto max-h-[42vh] rounded-xl object-cover object-center"
+                loading="lazy"
+              />
+            </div>
+
+            <div className="mt-3 rounded-2xl border border-yellow-500/15 bg-neutral-900/60 p-3 shadow-[0_12px_40px_rgba(0,0,0,0.25)]">
+              <div className="overflow-hidden rounded-xl border border-white/10 bg-black/40">
+                <iframe
+                  title="Store location preview"
+                  src="https://www.google.com/maps?q=13.55826591577359,123.27199911382527&z=17&output=embed"
+                  className="w-full h-44"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+              </div>
+              <div className="mt-2 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-heading-secondary font-extrabold">Map Preview</div>
+                  <div className="text-[11px] text-gray-300 truncate">
+                    13.55826591577359, 123.27199911382527
+                  </div>
+                </div>
+                <a
+                  href="https://www.google.com/maps/dir/?api=1&origin=My+Location&destination=13.55826591577359,123.27199911382527"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="shrink-0 px-3 py-1.5 rounded-xl bg-yellow-400 text-black text-xs font-extrabold hover:bg-yellow-300 transition-colors"
+                  aria-label="Open directions to KaeDy's Pizza Hub in Google Maps"
+                  title="Open Google Maps directions"
+                >
+                  Open Directions
+                </a>
               </div>
             </div>
           </div>
@@ -458,6 +502,63 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               <p className="text-sm text-gray-300">
                 Every pizza is crafted with passion and care
               </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 pb-8">
+          <h2 className="text-3xl font-bold text-center mb-6 text-heading-primary">Our Story</h2>
+          <div className="rounded-2xl border border-yellow-500/15 bg-neutral-900/60 p-6 md:p-8 shadow-[0_12px_40px_rgba(0,0,0,0.25)] max-w-4xl mx-auto">
+            <div className="text-heading-secondary font-extrabold text-lg">Founded in 2023</div>
+            <p className="text-gray-200 mt-3 leading-relaxed">
+              KaeDy&apos;s Pizza Hub has been serving not just pizzas, but comforting budget meals,
+              crispy chicken, and refreshing milk tea to our community. What started as a small family
+              business has grown into a beloved local favorite.
+            </p>
+            <p className="text-gray-200 mt-4 leading-relaxed">
+              We believe in using only the freshest ingredients and recipes crafted with care. Every order is made with love to keep you full and satisfied.
+            </p>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 pb-12">
+          <h2 className="text-3xl font-bold text-center mb-6 text-heading-primary">Store</h2>
+          <div className="rounded-2xl border border-yellow-500/15 bg-neutral-900/60 p-3 md:p-4 overflow-hidden max-w-4xl mx-auto shadow-[0_12px_40px_rgba(0,0,0,0.25)]">
+            <img
+              src="/assets/store1.jpg"
+              alt="KaeDy's Pizza Hub physical store"
+              className="w-full h-auto max-h-[min(56vh,520px)] rounded-xl object-cover object-center"
+              loading="lazy"
+            />
+          </div>
+
+          <div className="mt-4 rounded-2xl border border-yellow-500/15 bg-neutral-900/60 p-3 md:p-4 overflow-hidden max-w-4xl mx-auto shadow-[0_12px_40px_rgba(0,0,0,0.25)]">
+            <div className="overflow-hidden rounded-xl border border-white/10 bg-black/40">
+              <iframe
+                title="Store location preview"
+                src="https://www.google.com/maps?q=13.55826591577359,123.27199911382527&z=17&output=embed"
+                className="w-full h-64"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
+            <div className="mt-3 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <div className="text-heading-secondary font-extrabold">Map Preview</div>
+                <div className="text-xs text-gray-300 truncate">
+                  Open Google Maps for route from your location
+                </div>
+              </div>
+              <a
+                href="https://www.google.com/maps/dir/?api=1&origin=My+Location&destination=13.55826591577359,123.27199911382527"
+                target="_blank"
+                rel="noreferrer"
+                className="shrink-0 px-4 py-2 rounded-xl bg-yellow-400 text-black text-xs font-extrabold hover:bg-yellow-300 transition-colors"
+                aria-label="Open directions to KaeDy's Pizza Hub in Google Maps"
+                title="Open Google Maps directions"
+              >
+                Open Directions
+              </a>
             </div>
           </div>
         </div>

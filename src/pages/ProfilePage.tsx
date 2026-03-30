@@ -1,7 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { User, Package, Edit2, Save, X, Settings, Image as ImageIcon, ChevronDown, Trash2 } from 'lucide-react';
+import {
+  User,
+  Package,
+  Edit2,
+  Save,
+  X,
+  Settings,
+  Image as ImageIcon,
+  ChevronDown,
+  Trash2,
+} from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase, Order, OrderItem } from '../lib/supabase';
+import { formatSupabaseError } from '../lib/formatSupabaseError';
+
+const fmtPhp = (n: number) => `₱${n.toFixed(2)}`;
 
 type OrderWithItems = Order & {
   order_items: OrderItem[];
@@ -41,6 +54,7 @@ export default function ProfilePage() {
   const passwordNoticeRef = useRef<HTMLDivElement | null>(null);
   const [passwordSuccessModalOpen, setPasswordSuccessModalOpen] = useState(false);
   const [accountSettingsOpen, setAccountSettingsOpen] = useState(false);
+  const [redeemingScore, setRedeemingScore] = useState(false);
 
   const avatarOptions = [
     '/avatars/boy1.png',
@@ -219,7 +233,7 @@ export default function ProfilePage() {
       await fetchOrders();
     } catch (error) {
       console.error('Error deleting orders:', error);
-      setDeleteOrdersError('Unable to delete selected orders. Please try again.');
+      setDeleteOrdersError(formatSupabaseError(error, 'Unable to delete selected orders. Please try again.'));
     } finally {
       setDeletingOrders(false);
     }
@@ -272,6 +286,25 @@ export default function ProfilePage() {
       console.error('Error updating profile:', error);
     } finally {
       setSavingProfile(false);
+    }
+  };
+
+  const gameScoreBalance = customerProfile?.game_score_balance ?? 0;
+  const pesoWalletBalance = Number(customerProfile?.peso_balance ?? 0);
+  const redeemableWholePhp = Math.floor(gameScoreBalance / 50);
+
+  const handleRedeemGameScore = async () => {
+    if (redeemableWholePhp < 1) return;
+    setRedeemingScore(true);
+    try {
+      const { error } = await supabase.rpc('redeem_game_score_to_peso');
+      if (error) throw error;
+      await refreshProfiles();
+    } catch (error) {
+      console.error('redeem_game_score_to_peso', error);
+      window.alert('Could not redeem. You need at least 50 points (50 pts = ₱1).');
+    } finally {
+      setRedeemingScore(false);
     }
   };
 
@@ -347,67 +380,95 @@ export default function ProfilePage() {
           <h1 className="text-3xl md:text-4xl font-black text-heading-primary tracking-tight">
             My Profile
           </h1>
-          <p className="mt-1 text-sm text-gray-400">
+          <p className="mt-2 text-base text-gray-400">
             View and update your personal details and orders.
           </p>
         </div>
 
         <div className="bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950 rounded-3xl shadow-[0_18px_60px_rgba(0,0,0,0.7)] p-6 md:p-8 mb-8 border border-yellow-500/30">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setAvatarPickerOpen(true)}
-                  className="group relative bg-yellow-500/10 w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center border border-yellow-500/40 shadow-inner shadow-yellow-500/20 overflow-hidden hover:border-yellow-400/70 transition-colors"
-                  aria-label="Choose avatar"
-                >
-                  {avatarSrc ? (
-                    <img
-                      src={avatarSrc}
-                      alt="Profile avatar"
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <User className="w-9 h-9 md:w-10 md:h-10 text-yellow-300" />
-                  )}
-                  <span className="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <span className="absolute bottom-1.5 right-1.5 inline-flex items-center justify-center w-7 h-7 rounded-full bg-black/80 border border-yellow-500/60 text-yellow-200 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ImageIcon className="w-4 h-4" />
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAvatarPickerOpen(true)}
-                  className="absolute left-1/2 -bottom-2.5 -translate-x-1/2 px-3.5 py-1 rounded-lg text-[11px] font-semibold bg-yellow-600 text-black border border-yellow-500 shadow-md hover:bg-yellow-500 transition-colors"
-                  aria-label="Add avatar"
-                >
-                  Add
-                </button>
-              </div>
-              <div>
-                <h2 className="text-2xl md:text-3xl font-black text-heading-primary leading-tight">
-                  {customerProfile.full_name}
-                </h2>
-                {customerProfile.username && (
-                  <p className="text-sm text-heading-secondary/90 mt-1">
-                    @{customerProfile.username}
-                  </p>
+          <div className="mb-6 flex flex-row items-start gap-4 md:gap-6">
+            <div className="relative shrink-0">
+              <button
+                type="button"
+                onClick={() => setAvatarPickerOpen(true)}
+                className="group relative bg-yellow-500/10 w-24 h-24 md:w-28 md:h-28 rounded-full flex items-center justify-center border border-yellow-500/40 shadow-inner shadow-yellow-500/20 overflow-hidden hover:border-yellow-400/70 transition-colors"
+                aria-label="Choose avatar"
+              >
+                {avatarSrc ? (
+                  <img
+                    src={avatarSrc}
+                    alt="Profile avatar"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <User className="w-10 h-10 md:w-12 md:h-12 text-yellow-300" />
                 )}
-                {user?.email && (
-                  <p className="text-sm text-gray-300 mt-1 break-all">
-                    {user.email}
-                  </p>
-                )}
-              </div>
+                <span className="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <span className="absolute bottom-1.5 right-1.5 inline-flex items-center justify-center w-7 h-7 rounded-full bg-black/80 border border-yellow-500/60 text-yellow-200 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <ImageIcon className="w-4 h-4" />
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setAvatarPickerOpen(true)}
+                className="absolute left-1/2 -bottom-2.5 -translate-x-1/2 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-yellow-600 text-black border border-yellow-500 shadow-md hover:bg-yellow-500 transition-colors"
+                aria-label="Add avatar"
+              >
+                Add
+              </button>
+            </div>
+            <div className="min-w-0 flex-1 pt-1">
+              <h2 className="text-2xl md:text-3xl font-black text-heading-primary leading-tight">
+                {customerProfile.full_name}
+              </h2>
+              {customerProfile.username ? (
+                <p className="text-lg md:text-xl text-heading-secondary/90 mt-1.5 font-medium">
+                  @{customerProfile.username}
+                </p>
+              ) : null}
             </div>
           </div>
 
+          <div className="mb-8 rounded-2xl border border-amber-500/25 bg-black/35 px-4 py-4 md:px-5 md:py-5">
+            <p className="text-sm md:text-base font-semibold text-gray-400 mb-3">Rewards</p>
+            <div className="grid grid-cols-2 gap-3 md:gap-4">
+              <div className="rounded-xl bg-black/50 border border-yellow-500/25 px-3 py-3 md:px-4 md:py-4">
+                <p className="text-sm text-gray-500 font-medium">Points</p>
+                <p className="text-2xl md:text-3xl font-black text-amber-200 tabular-nums mt-1">{gameScoreBalance}</p>
+              </div>
+              <div className="rounded-xl bg-black/50 border border-emerald-500/25 px-3 py-3 md:px-4 md:py-4">
+                <p className="text-sm text-gray-500 font-medium">Wallet</p>
+                <p className="text-2xl md:text-3xl font-bold text-emerald-300 tabular-nums mt-1">{fmtPhp(pesoWalletBalance)}</p>
+              </div>
+            </div>
+            <p className="text-sm md:text-base text-gray-500 mt-3">50 pts = ₱1</p>
+            <div className="mt-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-3">
+              <button
+                type="button"
+                onClick={() => void handleRedeemGameScore()}
+                disabled={redeemableWholePhp < 1 || redeemingScore}
+                className="w-full sm:w-auto px-5 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-black font-bold text-base hover:from-amber-300 hover:to-orange-400 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {redeemingScore ? 'Redeeming…' : 'Redeem to wallet'}
+              </button>
+              {redeemableWholePhp >= 1 ? (
+                <span className="text-sm md:text-base text-gray-400">
+                  {redeemableWholePhp * 50} pts → {fmtPhp(redeemableWholePhp)}
+                </span>
+              ) : gameScoreBalance > 0 ? (
+                <span className="text-sm md:text-base text-gray-500">Need {50 - gameScoreBalance} more pts for ₱1.</span>
+              ) : (
+                <span className="text-sm md:text-base text-gray-500">Play the Math Challenge to earn points.</span>
+              )}
+            </div>
+          </div>
+
+          <p className="text-sm md:text-base font-semibold text-gray-400 mb-3">Your information</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-            <div className="rounded-2xl bg-black/40 border border-yellow-500/15 px-4 py-3">
+            <div className="rounded-2xl bg-black/40 border border-yellow-500/15 px-4 py-4 md:px-5 md:py-4">
               <div className="flex items-start justify-between gap-3">
-                <p className="text-[11px] font-semibold tracking-wide text-heading-secondary/85 uppercase">
+                <p className="text-sm md:text-base font-semibold tracking-wide text-heading-secondary/90 uppercase">
                   Full Name
                 </p>
                 {!editingFields.full_name && (
@@ -417,7 +478,7 @@ export default function ProfilePage() {
                     className="p-2 -m-2 rounded-lg text-yellow-200/90 hover:text-yellow-100 hover:bg-yellow-500/10 transition-colors"
                     aria-label="Edit full name"
                   >
-                    <Edit2 className="w-4 h-4" />
+                    <Edit2 className="w-5 h-5" />
                   </button>
                 )}
               </div>
@@ -426,39 +487,39 @@ export default function ProfilePage() {
                   type="text"
                   value={profileForm.full_name}
                   onChange={(e) => handleProfileChange('full_name', e.target.value)}
-                  className="mt-1 w-full px-3 py-2 rounded-lg bg-black/70 border border-yellow-500/40 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                  className="mt-2 w-full px-3 py-2.5 rounded-lg bg-black/70 border border-yellow-500/40 text-gray-100 text-base focus:outline-none focus:ring-2 focus:ring-yellow-400"
                 />
               ) : (
-                <p className="mt-1 text-sm text-gray-100 font-medium">
+                <p className="mt-2 text-base md:text-lg text-gray-100 font-medium">
                   {customerProfile.full_name}
                 </p>
               )}
             </div>
 
-            <div className="rounded-2xl bg-black/40 border border-yellow-500/15 px-4 py-3">
-              <p className="text-[11px] font-semibold tracking-wide text-heading-secondary/85 uppercase">
+            <div className="rounded-2xl bg-black/40 border border-yellow-500/15 px-4 py-4 md:px-5 md:py-4">
+              <p className="text-sm md:text-base font-semibold tracking-wide text-heading-secondary/90 uppercase">
                 Username
               </p>
-              <p className="mt-1 text-sm text-gray-100 break-all">
+              <p className="mt-2 text-base md:text-lg text-gray-100 break-all font-medium">
                 {customerProfile.username ? `@${customerProfile.username}` : '—'}
               </p>
-              <p className="mt-1 text-[11px] text-gray-500">
+              <p className="mt-2 text-sm text-gray-500">
                 Username cannot be edited.
               </p>
             </div>
 
-            <div className="rounded-2xl bg-black/40 border border-yellow-500/15 px-4 py-3">
-              <p className="text-[11px] font-semibold tracking-wide text-heading-secondary/85 uppercase">
+            <div className="rounded-2xl bg-black/40 border border-yellow-500/15 px-4 py-4 md:px-5 md:py-4">
+              <p className="text-sm md:text-base font-semibold tracking-wide text-heading-secondary/90 uppercase">
                 Email
               </p>
-              <p className="mt-1 text-sm text-gray-100 break-all">
+              <p className="mt-2 text-base md:text-lg text-gray-100 break-all">
                 {user?.email ?? customerProfile.email}
               </p>
             </div>
 
-            <div className="rounded-2xl bg-black/40 border border-yellow-500/15 px-4 py-3">
+            <div className="rounded-2xl bg-black/40 border border-yellow-500/15 px-4 py-4 md:px-5 md:py-4">
               <div className="flex items-start justify-between gap-3">
-                <p className="text-[11px] font-semibold tracking-wide text-heading-secondary/85 uppercase">
+                <p className="text-sm md:text-base font-semibold tracking-wide text-heading-secondary/90 uppercase">
                   Phone Number
                 </p>
                 {!editingFields.phone && (
@@ -468,7 +529,7 @@ export default function ProfilePage() {
                     className="p-2 -m-2 rounded-lg text-yellow-200/90 hover:text-yellow-100 hover:bg-yellow-500/10 transition-colors"
                     aria-label="Edit phone number"
                   >
-                    <Edit2 className="w-4 h-4" />
+                    <Edit2 className="w-5 h-5" />
                   </button>
                 )}
               </div>
@@ -477,18 +538,18 @@ export default function ProfilePage() {
                   type="tel"
                   value={profileForm.phone}
                   onChange={(e) => handleProfileChange('phone', e.target.value)}
-                  className="mt-1 w-full px-3 py-2 rounded-lg bg-black/70 border border-yellow-500/40 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                  className="mt-2 w-full px-3 py-2.5 rounded-lg bg-black/70 border border-yellow-500/40 text-gray-100 text-base focus:outline-none focus:ring-2 focus:ring-yellow-400"
                 />
               ) : (
-                <p className="mt-1 text-sm text-gray-100">
+                <p className="mt-2 text-base md:text-lg text-gray-100">
                   {customerProfile.phone || '—'}
                 </p>
               )}
             </div>
 
-            <div className="rounded-2xl bg-black/40 border border-yellow-500/15 px-4 py-3 md:row-span-1">
+            <div className="rounded-2xl bg-black/40 border border-yellow-500/15 px-4 py-4 md:px-5 md:py-4 md:row-span-1">
               <div className="flex items-start justify-between gap-3">
-                <p className="text-[11px] font-semibold tracking-wide text-heading-secondary/85 uppercase">
+                <p className="text-sm md:text-base font-semibold tracking-wide text-heading-secondary/90 uppercase">
                   Address
                 </p>
                 {!editingFields.address && (
@@ -498,7 +559,7 @@ export default function ProfilePage() {
                     className="p-2 -m-2 rounded-lg text-yellow-200/90 hover:text-yellow-100 hover:bg-yellow-500/10 transition-colors"
                     aria-label="Edit address"
                   >
-                    <Edit2 className="w-4 h-4" />
+                    <Edit2 className="w-5 h-5" />
                   </button>
                 )}
               </div>
@@ -506,11 +567,11 @@ export default function ProfilePage() {
                 <textarea
                   value={profileForm.address}
                   onChange={(e) => handleProfileChange('address', e.target.value)}
-                  rows={2}
-                  className="mt-1 w-full px-3 py-2 rounded-lg bg-black/70 border border-yellow-500/40 text-gray-100 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                  rows={3}
+                  className="mt-2 w-full px-3 py-2.5 rounded-lg bg-black/70 border border-yellow-500/40 text-gray-100 text-base resize-none focus:outline-none focus:ring-2 focus:ring-yellow-400"
                 />
               ) : (
-                <p className="mt-1 text-sm text-gray-100 whitespace-pre-line">
+                <p className="mt-2 text-base md:text-lg text-gray-100 whitespace-pre-line">
                   {customerProfile.address || '—'}
                 </p>
               )}
@@ -522,19 +583,19 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={cancelEditing}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-neutral-800 text-gray-100 hover:bg-neutral-700 transition-colors"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-base font-semibold bg-neutral-800 text-gray-100 hover:bg-neutral-700 transition-colors"
                 disabled={savingProfile}
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleSaveProfile}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-yellow-400 text-black hover:bg-yellow-300 transition-colors disabled:opacity-70"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-base font-semibold bg-yellow-400 text-black hover:bg-yellow-300 transition-colors disabled:opacity-70"
                 disabled={savingProfile}
               >
-                <Save className="w-4 h-4" />
+                <Save className="w-5 h-5" />
                 {savingProfile ? 'Saving...' : 'Save changes'}
               </button>
             </div>
@@ -688,10 +749,24 @@ export default function ProfilePage() {
                               <span className="font-semibold text-yellow-300">₱{order.total_amount.toFixed(2)}</span>
                             </div>
                             {order.discount_amount > 0 && (
-                              <div className="flex justify-between text-sm text-green-400">
-                                <span>Discount:</span>
-                                <span className="font-semibold">-₱{order.discount_amount.toFixed(2)}</span>
-                              </div>
+                              <>
+                                {order.discount_amount - (order.wallet_discount_amount ?? 0) > 0.001 && (
+                                  <div className="flex justify-between text-sm text-green-400">
+                                    <span>Promo discount:</span>
+                                    <span className="font-semibold">
+                                      -₱{(order.discount_amount - (order.wallet_discount_amount ?? 0)).toFixed(2)}
+                                    </span>
+                                  </div>
+                                )}
+                                {(order.wallet_discount_amount ?? 0) > 0.001 && (
+                                  <div className="flex justify-between text-sm text-emerald-300/95">
+                                    <span>Peso wallet discount:</span>
+                                    <span className="font-semibold">
+                                      -₱{(order.wallet_discount_amount ?? 0).toFixed(2)}
+                                    </span>
+                                  </div>
+                                )}
+                              </>
                             )}
                             <div className="flex justify-between text-lg font-bold mt-2 text-yellow-300">
                               <span>Total:</span>
@@ -862,12 +937,24 @@ export default function ProfilePage() {
                               </span>
                             </div>
                             {order.discount_amount > 0 && (
-                              <div className="flex justify-between text-sm text-green-400">
-                                <span>Discount:</span>
-                                <span className="font-semibold">
-                                  -₱{order.discount_amount.toFixed(2)}
-                                </span>
-                              </div>
+                              <>
+                                {order.discount_amount - (order.wallet_discount_amount ?? 0) > 0.001 && (
+                                  <div className="flex justify-between text-sm text-green-400">
+                                    <span>Promo discount:</span>
+                                    <span className="font-semibold">
+                                      -₱{(order.discount_amount - (order.wallet_discount_amount ?? 0)).toFixed(2)}
+                                    </span>
+                                  </div>
+                                )}
+                                {(order.wallet_discount_amount ?? 0) > 0.001 && (
+                                  <div className="flex justify-between text-sm text-emerald-300/95">
+                                    <span>Peso wallet discount:</span>
+                                    <span className="font-semibold">
+                                      -₱{(order.wallet_discount_amount ?? 0).toFixed(2)}
+                                    </span>
+                                  </div>
+                                )}
+                              </>
                             )}
                             <div className="flex justify-between text-lg font-bold mt-2 text-yellow-300">
                               <span>Total:</span>

@@ -115,7 +115,7 @@ function GameRadiantBackdrop() {
 }
 
 export default function GamePage({ onNavigate }: GamePageProps) {
-  const { user } = useAuth();
+  const { user, refreshProfiles } = useAuth();
   const [gameEnabled, setGameEnabled] = useState(true);
   const [phase, setPhase] = useState<Phase>('start');
   const [difficulty, setDifficulty] = useState<Difficulty>('easy');
@@ -134,6 +134,7 @@ export default function GamePage({ onNavigate }: GamePageProps) {
   const gameOverAudioRef = useRef<HTMLAudioElement | null>(null);
   const gameStartAudioRef = useRef<HTMLAudioElement | null>(null);
   const tickAudioRef = useRef<HTMLAudioElement | null>(null);
+  const scoreRecordedRef = useRef(false);
   const timePct = useMemo(() => (timeLeft / GAME_SECONDS) * 100, [timeLeft]);
 
   const accentChoices = useMemo(
@@ -198,6 +199,23 @@ export default function GamePage({ onNavigate }: GamePageProps) {
   useEffect(() => {
     checkGameSettings();
   }, [user]);
+
+  useEffect(() => {
+    if (phase === 'start' || phase === 'ready' || phase === 'playing') {
+      scoreRecordedRef.current = false;
+    }
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== 'ended' || !user || scoreRecordedRef.current) return;
+    scoreRecordedRef.current = true;
+    if (score <= 0) return;
+    void (async () => {
+      const { error } = await supabase.rpc('record_game_score', { p_score: score });
+      if (error) console.error('record_game_score', error);
+      else await refreshProfiles();
+    })();
+  }, [phase, score, user, refreshProfiles]);
 
   useEffect(() => {
     if (phase !== 'playing') return;

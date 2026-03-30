@@ -32,6 +32,9 @@ export type CustomerProfile = {
   suspended_until?: string | null;
   suspension_reason?: string | null;
   created_at: string;
+  game_score_total?: number;
+  game_score_balance?: number;
+  peso_balance?: number;
 };
 
 export type AdminProfile = {
@@ -62,6 +65,7 @@ export type Order = {
   user_id: string;
   total_amount: number;
   discount_amount: number;
+  wallet_discount_amount?: number;
   final_amount: number;
   payment_method: 'COD' | 'GCash' | 'Maya' | 'PayPal';
   payment_reference: string | null;
@@ -90,7 +94,8 @@ export type PaymentMethodSetting = {
 export type OrderItem = {
   id: string;
   order_id: string;
-  menu_item_id: string;
+  /** Null if the menu product was deleted; line still has `menu_item_name` and prices. */
+  menu_item_id: string | null;
   menu_item_name: string;
   quantity: number;
   price: number;
