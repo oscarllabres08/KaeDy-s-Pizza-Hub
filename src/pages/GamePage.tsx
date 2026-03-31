@@ -697,22 +697,41 @@ export default function GamePage({ onNavigate }: GamePageProps) {
                       const rank = idx + 1;
                       const pts = difficulty === 'easy' ? row.best_easy : row.best_medium;
                       const initial = (row.display_name?.trim()?.charAt(0) || '?').toUpperCase();
+                      const rowHighlight =
+                        rank === 1
+                          ? 'border-amber-400/60 bg-gradient-to-r from-yellow-500/25 via-amber-500/15 to-yellow-600/10 ring-1 ring-amber-400/40 shadow-[0_0_22px_rgba(234,179,8,0.18)]'
+                          : rank === 2
+                            ? 'border-slate-300/50 bg-gradient-to-r from-slate-400/18 to-slate-600/12 ring-1 ring-slate-400/35 shadow-[0_0_18px_rgba(148,163,184,0.12)]'
+                            : rank === 3
+                              ? 'border-amber-900/55 bg-gradient-to-r from-orange-950/45 to-amber-950/30 ring-1 ring-orange-800/45 shadow-[0_0_16px_rgba(180,83,9,0.15)]'
+                              : 'border-white/10 bg-neutral-950/50';
+                      const rankNumClass =
+                        rank === 1
+                          ? 'text-amber-200'
+                          : rank === 2
+                            ? 'text-slate-200'
+                            : rank === 3
+                              ? 'text-amber-700'
+                              : 'text-gray-500';
+                      const trophyClass =
+                        rank === 1
+                          ? 'text-amber-300 drop-shadow-[0_0_8px_rgba(250,204,21,0.65)]'
+                          : rank === 2
+                            ? 'text-slate-300 drop-shadow-[0_0_6px_rgba(203,213,225,0.45)]'
+                            : 'text-amber-900 drop-shadow-[0_0_4px_rgba(146,64,14,0.35)]';
                       return (
                         <li
                           key={row.user_id}
-                          className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 ${
-                            rank === 1
-                              ? 'border-yellow-400/50 bg-yellow-500/10'
-                              : 'border-white/10 bg-neutral-950/50'
-                          }`}
+                          className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 ${rowHighlight}`}
                         >
-                          <span
-                            className={`w-7 text-center text-sm font-black tabular-nums shrink-0 ${
-                              rank === 1 ? 'text-yellow-300' : 'text-gray-500'
-                            }`}
-                          >
-                            {rank}
-                          </span>
+                          <div className="flex items-center gap-1.5 shrink-0 w-[3.25rem] justify-start">
+                            <span className={`text-center text-sm font-black tabular-nums ${rankNumClass}`}>
+                              {rank}
+                            </span>
+                            {rank <= 3 ? (
+                              <Trophy className={`w-4 h-4 shrink-0 ${trophyClass}`} aria-hidden />
+                            ) : null}
+                          </div>
                           {row.avatar_path ? (
                             <img
                               src={row.avatar_path}
