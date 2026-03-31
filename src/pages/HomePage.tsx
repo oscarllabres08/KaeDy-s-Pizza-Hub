@@ -325,7 +325,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               <div className="overflow-hidden rounded-xl border border-white/10 bg-black/40">
                 <iframe
                   title="Store location preview"
-                  src="https://www.google.com/maps?q=13.55826591577359,123.27199911382527&z=17&output=embed"
+                  src="https://www.google.com/maps?q=13.55826591577359,123.27199911382527&z=17&t=k&output=embed"
                   className="w-full h-44"
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"

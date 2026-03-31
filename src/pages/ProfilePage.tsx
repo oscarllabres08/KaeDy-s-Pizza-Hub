@@ -380,9 +380,6 @@ export default function ProfilePage() {
           <h1 className="text-3xl md:text-4xl font-black text-heading-primary tracking-tight">
             My Profile
           </h1>
-          <p className="mt-2 text-base text-gray-400">
-            View and update your personal details and orders.
-          </p>
         </div>
 
         <div className="bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950 rounded-3xl shadow-[0_18px_60px_rgba(0,0,0,0.7)] p-6 md:p-8 mb-8 border border-yellow-500/30">
