@@ -758,25 +758,25 @@ export default function GamePage({ onNavigate }: GamePageProps) {
                       return (
                         <li
                           key={row.user_id}
-                          className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 ${rowHighlight}`}
+                          className={`flex items-start gap-2 sm:gap-3 rounded-xl border px-2.5 sm:px-3 py-2.5 ${rowHighlight}`}
                         >
-                          <div className="flex items-center gap-1.5 shrink-0 w-[3.25rem] justify-start">
+                          <div className="flex items-start gap-1 shrink-0 w-10 sm:w-[3.25rem] justify-start pt-0.5">
                             <span className={`text-center text-sm font-black tabular-nums ${rankNumClass}`}>
                               {rank}
                             </span>
                             {rank <= 3 ? (
-                              <Trophy className={`w-4 h-4 shrink-0 ${trophyClass}`} aria-hidden />
+                              <Trophy className={`w-4 h-4 shrink-0 mt-0.5 ${trophyClass}`} aria-hidden />
                             ) : null}
                           </div>
                           {row.avatar_path ? (
                             <img
                               src={row.avatar_path}
                               alt=""
-                              className="w-10 h-10 rounded-full object-cover border border-yellow-500/25 shrink-0 bg-black"
+                              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover border border-yellow-500/25 shrink-0 bg-black mt-0.5"
                             />
                           ) : (
                             <div
-                              className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-black border shrink-0 ${
+                              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-black border shrink-0 mt-0.5 ${
                                 difficulty === 'easy'
                                   ? 'bg-emerald-500/20 border-emerald-400/40 text-emerald-100'
                                   : 'bg-amber-500/20 border-amber-400/40 text-amber-100'
@@ -785,16 +785,18 @@ export default function GamePage({ onNavigate }: GamePageProps) {
                               {initial}
                             </div>
                           )}
-                          <div className="min-w-0 flex-1">
-                            <p className="font-bold text-gray-100 truncate">{row.display_name || 'Player'}</p>
+                          <div className="min-w-0 flex-1 self-stretch flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
+                            <p className="min-w-0 flex-1 font-bold text-gray-100 text-left text-sm sm:text-base leading-snug break-words [overflow-wrap:anywhere]">
+                              {row.display_name || 'Player'}
+                            </p>
+                            <span
+                              className={`text-sm font-black tabular-nums shrink-0 sm:pt-0.5 sm:text-right ${
+                                difficulty === 'easy' ? 'text-emerald-300' : 'text-amber-300'
+                              }`}
+                            >
+                              {pts}
+                            </span>
                           </div>
-                          <span
-                            className={`text-sm font-black tabular-nums shrink-0 ${
-                              difficulty === 'easy' ? 'text-emerald-300' : 'text-amber-300'
-                            }`}
-                          >
-                            {pts}
-                          </span>
                         </li>
                       );
                     })}
