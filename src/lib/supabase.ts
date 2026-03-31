@@ -41,6 +41,8 @@ export type CustomerProfile = {
   game_score_balance?: number;
   /** PHP wallet from redeeming points; usable at checkout */
   peso_balance?: number;
+  /** Total PHP ever credited from redeeming points (current balance + spent at checkout) */
+  peso_lifetime_credited?: number;
 };
 
 /** One row per customer; best scores per math game difficulty (readable when signed in). */

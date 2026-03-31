@@ -159,6 +159,18 @@ export default function GamePage({ onNavigate }: GamePageProps) {
   const timePct = useMemo(() => (timeLeft / GAME_SECONDS) * 100, [timeLeft]);
   const restoredOnceRef = useRef(false);
   const userResetRef = useRef(false);
+  const phaseRef = useRef(phase);
+  const scoreRef = useRef(score);
+  const correctCountRef = useRef(correctCount);
+  const userRef = useRef(user);
+  const difficultyRef = useRef(difficulty);
+  const refreshProfilesRef = useRef(refreshProfiles);
+  phaseRef.current = phase;
+  scoreRef.current = score;
+  correctCountRef.current = correctCount;
+  userRef.current = user;
+  difficultyRef.current = difficulty;
+  refreshProfilesRef.current = refreshProfiles;
   const [leaderboardRows, setLeaderboardRows] = useState<MathGameBestScore[]>([]);
   const [myBestScores, setMyBestScores] = useState<{ best_easy: number; best_medium: number } | null>(null);
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
@@ -377,6 +389,30 @@ export default function GamePage({ onNavigate }: GamePageProps) {
     finalScore,
     finalCorrectCount,
   ]);
+
+  // Leaving the game page mid-run ends the session: count score like game over and drop saved "playing" state.
+  useEffect(() => {
+    return () => {
+      if (phaseRef.current !== 'playing') return;
+      try {
+        sessionStorage.removeItem(GAME_STATE_STORAGE_KEY);
+      } catch {
+        // ignore
+      }
+      const u = userRef.current;
+      const s = scoreRef.current;
+      const d = difficultyRef.current;
+      if (!u || s <= 0) return;
+      void (async () => {
+        const { error } = await supabase.rpc('record_game_score', {
+          p_score: s,
+          p_difficulty: d,
+        });
+        if (error) console.error('record_game_score (left page)', error);
+        else await refreshProfilesRef.current();
+      })();
+    };
+  }, []);
 
   useEffect(() => {
     if (phase === 'start' || phase === 'leaderboard' || phase === 'ready' || phase === 'playing') {

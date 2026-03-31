@@ -3,6 +3,17 @@ import { User } from '@supabase/supabase-js';
 import { supabase, CustomerProfile, AdminProfile } from '../lib/supabase';
 import { formatSupabaseError } from '../lib/formatSupabaseError';
 
+/** Set before sign-out so the user app can show why the session ended */
+export const SUSPENDED_NOTICE_STORAGE_KEY = 'kaedys_suspended_notice';
+
+export function customerSuspensionMessage(isoOrDate: string | Date, reason?: string | null) {
+  const until = typeof isoOrDate === 'string' ? new Date(isoOrDate) : isoOrDate;
+  let m = `Your account is temporarily suspended until ${until.toLocaleString()}.`;
+  const r = reason?.trim();
+  if (r) m += ` ${r}`;
+  return m;
+}
+
 type AuthContextType = {
   user: User | null;
   customerProfile: CustomerProfile | null;
@@ -73,7 +84,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (custErr) throw custErr;
       if (adminErr) throw adminErr;
-      setCustomerProfile((cust as CustomerProfile) ?? null);
+
+      const customer = (cust as CustomerProfile) ?? null;
+      if (customer?.suspended_until) {
+        const until = new Date(customer.suspended_until);
+        if (until.getTime() > Date.now()) {
+          try {
+            sessionStorage.setItem(
+              SUSPENDED_NOTICE_STORAGE_KEY,
+              customerSuspensionMessage(until, customer.suspension_reason)
+            );
+          } catch {
+            /* ignore quota / private mode */
+          }
+          await supabase.auth.signOut();
+          return;
+        }
+      }
+
+      setCustomerProfile(customer);
       setAdminProfile((admin as AdminProfile) ?? null);
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -185,14 +214,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userId = sessionData.session.user.id;
       const { data: me } = await supabase
         .from('customer_profiles')
-        .select('suspended_until')
+        .select('suspended_until, suspension_reason')
         .eq('id', userId)
         .maybeSingle();
 
       const suspendedUntil = me?.suspended_until ? new Date(me.suspended_until) : null;
       if (suspendedUntil && suspendedUntil.getTime() > Date.now()) {
+        const notice = customerSuspensionMessage(suspendedUntil, me?.suspension_reason);
+        try {
+          sessionStorage.setItem(SUSPENDED_NOTICE_STORAGE_KEY, notice);
+        } catch {
+          /* ignore */
+        }
         await supabase.auth.signOut();
-        throw new Error(`Your account is temporarily suspended until ${suspendedUntil.toLocaleString()}.`);
+        throw new Error(notice);
       }
 
       await fetchProfiles(userId);

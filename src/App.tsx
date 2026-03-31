@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import Navigation from './components/Navigation';
 import Footer from './components/Footer';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider, useAuth, SUSPENDED_NOTICE_STORAGE_KEY } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
 import { BuyNowProvider } from './contexts/BuyNowContext';
 
@@ -37,7 +37,24 @@ type PageId =
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<PageId>('home');
-  const { loading, profilesLoaded } = useAuth();
+  const [suspendedBanner, setSuspendedBanner] = useState<string | null>(null);
+  const { loading, profilesLoaded, user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      setSuspendedBanner(null);
+      return;
+    }
+    try {
+      const n = sessionStorage.getItem(SUSPENDED_NOTICE_STORAGE_KEY);
+      if (n) {
+        setSuspendedBanner(n);
+        sessionStorage.removeItem(SUSPENDED_NOTICE_STORAGE_KEY);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [user]);
 
   useEffect(() => {
     const hash = window.location.hash.replace('#', '') as PageId | '';
@@ -116,6 +133,23 @@ function AppContent() {
 
   return (
     <div className="min-h-screen w-full max-w-[100vw] overflow-x-hidden flex flex-col pt-16 bg-gradient-to-br from-black to-neutral-900">
+      {suspendedBanner ? (
+        <div
+          role="alert"
+          className="fixed top-16 left-0 right-0 z-[60] px-3 pt-2 flex justify-center pointer-events-none"
+        >
+          <div className="pointer-events-auto flex w-full max-w-2xl items-start gap-3 rounded-xl border border-red-400/45 bg-red-950/95 px-4 py-3 shadow-lg backdrop-blur-sm">
+            <p className="flex-1 text-sm text-red-100 leading-snug">{suspendedBanner}</p>
+            <button
+              type="button"
+              onClick={() => setSuspendedBanner(null)}
+              className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-red-100 hover:bg-red-500/20"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      ) : null}
       <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
       <main className="flex-1 min-w-0 pb-24 md:pb-0 w-full">
         <Suspense fallback={<PageFallback />}>{content}</Suspense>

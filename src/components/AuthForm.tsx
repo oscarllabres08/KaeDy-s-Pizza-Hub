@@ -77,6 +77,9 @@ export default function AuthForm({ onSuccess, requireAddress = true, adminSignUp
     if (lower.includes('too many') || lower.includes('rate limit')) {
       return 'Too many attempts. Please wait a bit and try again.';
     }
+    if (lower.includes('suspended')) {
+      return msg;
+    }
 
     // Network / blocked requests (common on iOS with content blockers / private relay)
     if (
