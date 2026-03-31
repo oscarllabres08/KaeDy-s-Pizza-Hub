@@ -33,12 +33,24 @@ export type CustomerProfile = {
   suspended_until?: string | null;
   suspension_reason?: string | null;
   created_at: string;
+  /** Public path for avatar image (e.g. /avatars/boy1.png); used on leaderboards */
+  avatar_path?: string | null;
   /** Lifetime points from the math game */
   game_score_total?: number;
   /** Points available to redeem (50 pts = ₱1) */
   game_score_balance?: number;
   /** PHP wallet from redeeming points; usable at checkout */
   peso_balance?: number;
+};
+
+/** One row per customer; best scores per math game difficulty (readable when signed in). */
+export type MathGameBestScore = {
+  user_id: string;
+  best_easy: number;
+  best_medium: number;
+  display_name: string;
+  avatar_path: string | null;
+  updated_at: string;
 };
 
 export type AdminProfile = {

@@ -82,9 +82,10 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!user?.id) return;
     const key = `kph:avatar:${user.id}`;
-    const saved = window.localStorage.getItem(key);
-    setAvatarSrc(saved || null);
-  }, [user?.id]);
+    const fromDb = customerProfile?.avatar_path?.trim() || null;
+    const savedLocal = window.localStorage.getItem(key);
+    setAvatarSrc(fromDb || savedLocal || null);
+  }, [user?.id, customerProfile?.avatar_path]);
 
   useEffect(() => {
     if (!passwordSuccess) return;
@@ -259,12 +260,19 @@ export default function ProfilePage() {
     });
   };
 
-  const handlePickAvatar = (src: string) => {
+  const handlePickAvatar = async (src: string) => {
     if (!user?.id) return;
     const key = `kph:avatar:${user.id}`;
     window.localStorage.setItem(key, src);
     setAvatarSrc(src);
     setAvatarPickerOpen(false);
+    try {
+      const { error } = await supabase.from('customer_profiles').update({ avatar_path: src }).eq('id', user.id);
+      if (error) console.error('avatar_path update', error);
+      else await refreshProfiles();
+    } catch (e) {
+      console.error('avatar_path update', e);
+    }
   };
 
   const handleSaveProfile = async () => {

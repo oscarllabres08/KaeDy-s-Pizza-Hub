@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Calculator, RotateCcw, Timer, Trophy } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
+import { supabase, type MathGameBestScore } from '../lib/supabase';
 
 type GamePageProps = {
   onNavigate: (page: string) => void;
 };
 
 type Difficulty = 'easy' | 'medium';
-type Phase = 'start' | 'ready' | 'playing' | 'ended';
+type Phase = 'start' | 'leaderboard' | 'ready' | 'playing' | 'ended';
 type EndReason = 'time' | 'wrong';
 
 type Question = {
@@ -159,6 +159,50 @@ export default function GamePage({ onNavigate }: GamePageProps) {
   const timePct = useMemo(() => (timeLeft / GAME_SECONDS) * 100, [timeLeft]);
   const restoredOnceRef = useRef(false);
   const userResetRef = useRef(false);
+  const [leaderboardRows, setLeaderboardRows] = useState<MathGameBestScore[]>([]);
+  const [myBestScores, setMyBestScores] = useState<{ best_easy: number; best_medium: number } | null>(null);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+
+  const loadLeaderboard = useCallback(async () => {
+    if (!user?.id) return;
+    const col = difficulty === 'easy' ? 'best_easy' : 'best_medium';
+    setLeaderboardLoading(true);
+    try {
+      const [{ data: top, error: topErr }, { data: mine, error: mineErr }] = await Promise.all([
+        supabase
+          .from('math_game_best_scores')
+          .select('user_id,display_name,avatar_path,best_easy,best_medium,updated_at')
+          .gt(col, 0)
+          .order(col, { ascending: false })
+          .limit(5),
+        supabase.from('math_game_best_scores').select('best_easy,best_medium').eq('user_id', user.id).maybeSingle(),
+      ]);
+      if (topErr) console.error('leaderboard top', topErr);
+      if (mineErr) console.error('leaderboard mine', mineErr);
+      setLeaderboardRows((top as MathGameBestScore[] | null) ?? []);
+      setMyBestScores(mine);
+    } finally {
+      setLeaderboardLoading(false);
+    }
+  }, [user?.id, difficulty]);
+
+  useEffect(() => {
+    if (phase !== 'leaderboard' || !user?.id) return;
+    void loadLeaderboard();
+    const channel = supabase
+      .channel(`math_game_leaderboard_${difficulty}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'math_game_best_scores' },
+        () => {
+          void loadLeaderboard();
+        }
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [phase, user?.id, difficulty, loadLeaderboard]);
 
   const accentChoices = useMemo(
     () => [
@@ -240,6 +284,7 @@ export default function GamePage({ onNavigate }: GamePageProps) {
       }
       if (
         parsed.phase !== 'start' &&
+        parsed.phase !== 'leaderboard' &&
         parsed.phase !== 'ready' &&
         parsed.phase !== 'playing' &&
         parsed.phase !== 'ended'
@@ -256,7 +301,7 @@ export default function GamePage({ onNavigate }: GamePageProps) {
         return;
       }
 
-      setPhase(parsed.phase);
+      setPhase(parsed.phase === 'ready' ? 'leaderboard' : parsed.phase);
       setDifficulty(parsed.difficulty);
       setTimeLeft(Math.max(0, Math.min(GAME_SECONDS, Number(parsed.timeLeft ?? GAME_SECONDS))));
       setScore(Math.max(0, Number(parsed.score ?? 0)));
@@ -334,7 +379,7 @@ export default function GamePage({ onNavigate }: GamePageProps) {
   ]);
 
   useEffect(() => {
-    if (phase === 'start' || phase === 'ready' || phase === 'playing') {
+    if (phase === 'start' || phase === 'leaderboard' || phase === 'ready' || phase === 'playing') {
       scoreRecordedRef.current = false;
     }
   }, [phase]);
@@ -344,11 +389,14 @@ export default function GamePage({ onNavigate }: GamePageProps) {
     scoreRecordedRef.current = true;
     if (score <= 0) return;
     void (async () => {
-      const { error } = await supabase.rpc('record_game_score', { p_score: score });
+      const { error } = await supabase.rpc('record_game_score', {
+        p_score: score,
+        p_difficulty: difficulty,
+      });
       if (error) console.error('record_game_score', error);
       else await refreshProfiles();
     })();
-  }, [phase, score, user, refreshProfiles]);
+  }, [phase, score, user, refreshProfiles, difficulty]);
 
   useEffect(() => {
     if (phase !== 'playing') return;
@@ -414,7 +462,7 @@ export default function GamePage({ onNavigate }: GamePageProps) {
       return;
     }
     setDifficulty(d);
-    setPhase('ready');
+    setPhase('leaderboard');
     setLocked(false);
     setLastPick(null);
   };
@@ -589,60 +637,126 @@ export default function GamePage({ onNavigate }: GamePageProps) {
             </div>
           )}
 
-          {phase === 'ready' && (
+          {phase === 'leaderboard' && (
             <div className="text-center">
-              <div className="mx-auto mb-6 w-20 h-20 rounded-3xl bg-gradient-to-br from-orange-400/30 to-rose-500/25 border border-orange-400/30 flex items-center justify-center shadow-lg shadow-orange-500/20">
-                <Timer className="w-10 h-10 text-orange-200" />
+              <div
+                className={`mx-auto mb-5 w-20 h-20 rounded-3xl flex items-center justify-center shadow-lg border ${
+                  difficulty === 'easy'
+                    ? 'bg-gradient-to-br from-emerald-500/25 to-teal-600/20 border-emerald-400/35 shadow-emerald-900/30'
+                    : 'bg-gradient-to-br from-amber-500/30 to-yellow-600/20 border-amber-400/35 shadow-amber-900/25'
+                }`}
+              >
+                <Trophy
+                  className={`w-10 h-10 ${difficulty === 'easy' ? 'text-emerald-200' : 'text-amber-200'}`}
+                />
               </div>
-              <h2 className="text-2xl md:text-3xl font-black mb-2 tracking-tight text-heading-primary">
-                Get ready!
+              <h2 className="text-2xl md:text-3xl font-black mb-1 tracking-tight text-heading-primary">
+                Leaderboard
               </h2>
-              <p className="text-sm text-gray-200 mb-6 leading-relaxed">
-                Difficulty{' '}
+              <p className="text-sm text-gray-200 mb-1">
                 <span
-                  className={`font-extrabold ${
-                    difficulty === 'easy' ? 'text-emerald-300' : 'text-amber-300'
-                  }`}
+                  className={`font-extrabold ${difficulty === 'easy' ? 'text-emerald-300' : 'text-amber-300'}`}
                 >
-                  {difficulty.toUpperCase()}
+                  {difficulty === 'easy' ? 'Easy' : 'Medium'}
                 </span>
-                . You have{' '}
-                <span className="text-yellow-300 font-extrabold">{GAME_SECONDS}s</span>.
+                <span className="text-gray-500"> · </span>
+                <span className="text-gray-400">Top 5 highest scores</span>
+              </p>
+              <p className="text-xs text-gray-500 mb-5">
+                {GAME_SECONDS}s run · Easy +1 / correct · Medium +2 / correct
               </p>
 
-              <div className="rounded-2xl border border-yellow-500/25 bg-gradient-to-br from-neutral-950/80 to-amber-950/25 p-5 text-left max-w-md mx-auto">
-                <p className="text-heading-secondary font-extrabold mb-3">How it works</p>
-                <div className="grid gap-2 text-sm text-gray-200">
-                  <div className="flex items-start gap-2">
-                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-                    <span>Multiplication only</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0 shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
-                    <span>4 multiple-choice answers</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-yellow-400 shrink-0 shadow-[0_0_8px_rgba(250,204,21,0.7)]" />
-                    <span>Correct = next question instantly</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0 shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
-                    <span>
-                      Score: Easy <span className="text-emerald-300 font-bold">+1</span>, Medium{' '}
-                      <span className="text-amber-300 font-bold">+2</span>
-                    </span>
-                  </div>
-                </div>
+              <div
+                className={`rounded-2xl border p-4 text-left mb-5 ${
+                  difficulty === 'easy'
+                    ? 'border-emerald-500/30 bg-gradient-to-br from-emerald-950/40 to-black/60'
+                    : 'border-amber-500/30 bg-gradient-to-br from-amber-950/35 to-black/60'
+                }`}
+              >
+                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">Your best score</p>
+                <p
+                  className={`text-3xl font-black tabular-nums mt-1 ${
+                    difficulty === 'easy' ? 'text-emerald-200' : 'text-amber-200'
+                  }`}
+                >
+                  {difficulty === 'easy' ? myBestScores?.best_easy ?? 0 : myBestScores?.best_medium ?? 0}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-yellow-500/20 bg-black/35 p-3 text-left min-h-[200px]">
+                <p className="text-xs font-extrabold text-yellow-200/90 mb-3 px-1">Top 5</p>
+                {leaderboardLoading ? (
+                  <p className="text-sm text-gray-500 text-center py-8">Loading…</p>
+                ) : leaderboardRows.length === 0 ? (
+                  <p className="text-sm text-gray-500 text-center py-8">
+                    No scores yet. Be the first to play!
+                  </p>
+                ) : (
+                  <ul className="space-y-2">
+                    {leaderboardRows.map((row, idx) => {
+                      const rank = idx + 1;
+                      const pts = difficulty === 'easy' ? row.best_easy : row.best_medium;
+                      const initial = (row.display_name?.trim()?.charAt(0) || '?').toUpperCase();
+                      return (
+                        <li
+                          key={row.user_id}
+                          className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 ${
+                            rank === 1
+                              ? 'border-yellow-400/50 bg-yellow-500/10'
+                              : 'border-white/10 bg-neutral-950/50'
+                          }`}
+                        >
+                          <span
+                            className={`w-7 text-center text-sm font-black tabular-nums shrink-0 ${
+                              rank === 1 ? 'text-yellow-300' : 'text-gray-500'
+                            }`}
+                          >
+                            {rank}
+                          </span>
+                          {row.avatar_path ? (
+                            <img
+                              src={row.avatar_path}
+                              alt=""
+                              className="w-10 h-10 rounded-full object-cover border border-yellow-500/25 shrink-0 bg-black"
+                            />
+                          ) : (
+                            <div
+                              className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-black border shrink-0 ${
+                                difficulty === 'easy'
+                                  ? 'bg-emerald-500/20 border-emerald-400/40 text-emerald-100'
+                                  : 'bg-amber-500/20 border-amber-400/40 text-amber-100'
+                              }`}
+                            >
+                              {initial}
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="font-bold text-gray-100 truncate">{row.display_name || 'Player'}</p>
+                          </div>
+                          <span
+                            className={`text-sm font-black tabular-nums shrink-0 ${
+                              difficulty === 'easy' ? 'text-emerald-300' : 'text-amber-300'
+                            }`}
+                          >
+                            {pts}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-7">
                 <button
+                  type="button"
                   onClick={startGame}
                   className="rounded-2xl bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 text-black px-5 py-3.5 font-black hover:from-amber-300 hover:via-orange-400 hover:to-rose-400 transition-all active:scale-[0.99] shadow-lg shadow-orange-500/30"
                 >
                   Start Game
                 </button>
                 <button
+                  type="button"
                   onClick={() => setPhase('start')}
                   className="rounded-2xl border-2 border-yellow-500/35 bg-neutral-900/80 px-5 py-3.5 font-black text-yellow-200 hover:bg-neutral-800/90 transition-all active:scale-[0.99]"
                 >
@@ -771,9 +885,10 @@ export default function GamePage({ onNavigate }: GamePageProps) {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-7">
                 <button
+                  type="button"
                   onClick={() => {
                     userResetRef.current = true;
-                    setPhase('ready');
+                    startGame();
                   }}
                   className="rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 text-black px-5 py-3.5 font-black hover:from-amber-300 hover:to-orange-400 transition-all active:scale-[0.99] flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25"
                 >
