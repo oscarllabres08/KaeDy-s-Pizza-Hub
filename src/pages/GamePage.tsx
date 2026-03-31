@@ -19,6 +19,24 @@ type Question = {
 
 const GAME_SECONDS = 30;
 const SOUND_CACHE_BUST = import.meta.env.DEV ? String(Date.now()) : '1';
+const GAME_STATE_STORAGE_KEY = 'kaedys_game_state_v1';
+
+type SavedGameState = {
+  v: 1;
+  savedAt: string;
+  phase: Phase;
+  difficulty: Difficulty;
+  timeLeft: number;
+  score: number;
+  correctCount: number;
+  endReason: EndReason;
+  question: Question;
+  choices: number[];
+  locked: boolean;
+  lastPick: null | { value: number; correct: boolean };
+  finalScore: number;
+  finalCorrectCount: number;
+};
 
 function createChainedAudio(srcCandidates: string[]) {
   const audio = new Audio();
@@ -122,6 +140,9 @@ export default function GamePage({ onNavigate }: GamePageProps) {
   const [timeLeft, setTimeLeft] = useState(GAME_SECONDS);
   const [score, setScore] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
+  const [finalScore, setFinalScore] = useState(0);
+  const [finalCorrectCount, setFinalCorrectCount] = useState(0);
+  const [hydrated, setHydrated] = useState(false);
   const [endReason, setEndReason] = useState<EndReason>('time');
   const [question, setQuestion] = useState<Question>(() => makeQuestion('easy'));
   const [choices, setChoices] = useState<number[]>(() => makeChoices(question.correct));
@@ -136,6 +157,8 @@ export default function GamePage({ onNavigate }: GamePageProps) {
   const tickAudioRef = useRef<HTMLAudioElement | null>(null);
   const scoreRecordedRef = useRef(false);
   const timePct = useMemo(() => (timeLeft / GAME_SECONDS) * 100, [timeLeft]);
+  const restoredOnceRef = useRef(false);
+  const userResetRef = useRef(false);
 
   const accentChoices = useMemo(
     () => [
@@ -199,6 +222,116 @@ export default function GamePage({ onNavigate }: GamePageProps) {
   useEffect(() => {
     checkGameSettings();
   }, [user]);
+
+  // Restore prior game state when returning to the Game tab/page.
+  useEffect(() => {
+    if (restoredOnceRef.current) return;
+    restoredOnceRef.current = true;
+    try {
+      const raw = sessionStorage.getItem(GAME_STATE_STORAGE_KEY);
+      if (!raw) {
+        setHydrated(true);
+        return;
+      }
+      const parsed = JSON.parse(raw) as Partial<SavedGameState>;
+      if (parsed.v !== 1) {
+        setHydrated(true);
+        return;
+      }
+      if (
+        parsed.phase !== 'start' &&
+        parsed.phase !== 'ready' &&
+        parsed.phase !== 'playing' &&
+        parsed.phase !== 'ended'
+      ) {
+        setHydrated(true);
+        return;
+      }
+      if (parsed.difficulty !== 'easy' && parsed.difficulty !== 'medium') {
+        setHydrated(true);
+        return;
+      }
+      if (!parsed.question || !Array.isArray(parsed.choices)) {
+        setHydrated(true);
+        return;
+      }
+
+      setPhase(parsed.phase);
+      setDifficulty(parsed.difficulty);
+      setTimeLeft(Math.max(0, Math.min(GAME_SECONDS, Number(parsed.timeLeft ?? GAME_SECONDS))));
+      setScore(Math.max(0, Number(parsed.score ?? 0)));
+      setCorrectCount(Math.max(0, Number(parsed.correctCount ?? 0)));
+      setFinalScore(Math.max(0, Number(parsed.finalScore ?? parsed.score ?? 0)));
+      setFinalCorrectCount(Math.max(0, Number(parsed.finalCorrectCount ?? parsed.correctCount ?? 0)));
+      setEndReason((parsed.endReason as EndReason) || 'time');
+      setQuestion({
+        a: Number(parsed.question.a),
+        b: Number(parsed.question.b),
+        correct: Number(parsed.question.correct),
+      });
+      setChoices((parsed.choices as unknown[]).map((c) => Number(c)));
+      setLocked(!!parsed.locked);
+      setLastPick(
+        parsed.lastPick && typeof parsed.lastPick === 'object'
+          ? { value: Number((parsed.lastPick as any).value), correct: !!(parsed.lastPick as any).correct }
+          : null
+      );
+      prevTimeLeftRef.current = Math.max(0, Math.min(GAME_SECONDS, Number(parsed.timeLeft ?? GAME_SECONDS)));
+      gameOverSoundPlayedRef.current = parsed.phase === 'ended';
+    } catch {
+      // ignore
+    } finally {
+      setHydrated(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Capture final snapshot on end.
+  useEffect(() => {
+    if (phase !== 'ended') return;
+    setFinalScore(score);
+    setFinalCorrectCount(correctCount);
+  }, [phase, score, correctCount]);
+
+  // Persist state (after hydration) so Game doesn't reset when navigating away/back.
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      const payload: SavedGameState = {
+        v: 1,
+        savedAt: new Date().toISOString(),
+        phase,
+        difficulty,
+        timeLeft,
+        score,
+        correctCount,
+        endReason,
+        question,
+        choices,
+        locked,
+        lastPick,
+        finalScore,
+        finalCorrectCount,
+      };
+      sessionStorage.setItem(GAME_STATE_STORAGE_KEY, JSON.stringify(payload));
+    } catch {
+      // ignore
+    }
+  }, [
+    hydrated,
+    phase,
+    difficulty,
+    timeLeft,
+    score,
+    correctCount,
+    endReason,
+    question,
+    choices,
+    locked,
+    lastPick,
+    finalScore,
+    finalCorrectCount,
+  ]);
 
   useEffect(() => {
     if (phase === 'start' || phase === 'ready' || phase === 'playing') {
@@ -295,6 +428,8 @@ export default function GamePage({ onNavigate }: GamePageProps) {
     setPhase('playing');
     setScore(0);
     setCorrectCount(0);
+    setFinalScore(0);
+    setFinalCorrectCount(0);
     setTimeLeft(GAME_SECONDS);
     setLocked(false);
     setLastPick(null);
@@ -626,17 +761,18 @@ export default function GamePage({ onNavigate }: GamePageProps) {
               <div className="mt-4 grid grid-cols-2 gap-3 max-w-md mx-auto">
                 <div className="rounded-2xl border border-amber-400/30 bg-gradient-to-br from-amber-950/50 to-orange-950/30 p-4 shadow-md shadow-amber-500/10">
                   <p className="text-xs text-amber-200/70 font-bold">FINAL SCORE</p>
-                  <p className="text-3xl font-black text-amber-100 tabular-nums mt-1">{score}</p>
+                  <p className="text-3xl font-black text-amber-100 tabular-nums mt-1">{finalScore}</p>
                 </div>
                 <div className="rounded-2xl border border-yellow-500/30 bg-gradient-to-br from-neutral-950/80 to-amber-950/35 p-4 shadow-md shadow-black/30">
                   <p className="text-xs text-yellow-200/80 font-bold">CORRECT</p>
-                  <p className="text-3xl font-black text-yellow-100 tabular-nums mt-1">{correctCount}</p>
+                  <p className="text-3xl font-black text-yellow-100 tabular-nums mt-1">{finalCorrectCount}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-7">
                 <button
                   onClick={() => {
+                    userResetRef.current = true;
                     setPhase('ready');
                   }}
                   className="rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 text-black px-5 py-3.5 font-black hover:from-amber-300 hover:to-orange-400 transition-all active:scale-[0.99] flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25"
@@ -645,7 +781,10 @@ export default function GamePage({ onNavigate }: GamePageProps) {
                   Restart
                 </button>
                 <button
-                  onClick={() => setPhase('start')}
+                  onClick={() => {
+                    userResetRef.current = true;
+                    setPhase('start');
+                  }}
                   className="rounded-2xl border-2 border-yellow-500/35 bg-neutral-900/90 px-5 py-3.5 font-black text-yellow-200 hover:bg-neutral-800 transition-all active:scale-[0.99]"
                 >
                   Change difficulty

@@ -30,6 +30,67 @@ export default function AuthForm({ onSuccess, requireAddress = true, adminSignUp
     address: '',
   });
 
+  const withTimeout = async <T,>(p: Promise<T>, ms: number, label: string): Promise<T> => {
+    let t: number | null = null;
+    const timeout = new Promise<never>((_, reject) => {
+      t = window.setTimeout(() => {
+        reject(
+          new Error(
+            `${label} is taking too long. Please check your internet connection, disable ad/content blockers, and try again.`
+          )
+        );
+      }, ms);
+    });
+    try {
+      return await Promise.race([p, timeout]);
+    } finally {
+      if (t) window.clearTimeout(t);
+    }
+  };
+
+  const formatAuthUiError = (err: unknown, context: 'Sign up' | 'Sign in') => {
+    const msg =
+      err && typeof err === 'object' && 'message' in err ? String((err as { message?: unknown }).message || '') : '';
+    const lower = msg.toLowerCase();
+
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      return 'You appear to be offline. Please connect to the internet and try again.';
+    }
+
+    if (lower.includes('taking too long')) {
+      return `${context} request timed out. Please try again. If you are on iOS/Safari, disable content blockers for this site and make sure cookies are allowed.`;
+    }
+
+    // Common Supabase / auth messages
+    if (lower.includes('user already registered') || lower.includes('already registered') || lower.includes('email already')) {
+      return 'This email is already registered. Try signing in instead.';
+    }
+    if (lower.includes('invalid email')) {
+      return 'Invalid email address. Please double-check and try again.';
+    }
+    if (lower.includes('password') && (lower.includes('weak') || lower.includes('short') || lower.includes('at least'))) {
+      return 'Password is too weak. Use at least 6 characters (more is better).';
+    }
+    if (lower.includes('invalid login credentials')) {
+      return 'Invalid email/username or password.';
+    }
+    if (lower.includes('too many') || lower.includes('rate limit')) {
+      return 'Too many attempts. Please wait a bit and try again.';
+    }
+
+    // Network / blocked requests (common on iOS with content blockers / private relay)
+    if (
+      lower.includes('failed to fetch') ||
+      lower.includes('networkerror') ||
+      lower.includes('load failed') ||
+      lower.includes('fetch') && lower.includes('failed')
+    ) {
+      return `${context} failed due to a network/blocking issue. Please check your connection, disable ad/content blockers for this site, and try again.`;
+    }
+
+    return msg || 'Something went wrong. Please try again.';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -48,16 +109,20 @@ export default function AuthForm({ onSuccess, requireAddress = true, adminSignUp
             return;
           }
         }
-        const { requiresAdminApproval } = await signUp(
-          formData.email,
-          formData.password,
-          {
-            full_name: formData.full_name,
-            username: formData.username.trim().toLowerCase(),
-            phone: formData.phone,
-            address: formData.address,
-          },
-          adminSignUp
+        const { requiresAdminApproval } = await withTimeout(
+          signUp(
+            formData.email,
+            formData.password,
+            {
+              full_name: formData.full_name,
+              username: formData.username.trim().toLowerCase(),
+              phone: formData.phone,
+              address: formData.address,
+            },
+            adminSignUp
+          ),
+          20000,
+          'Sign up'
         );
 
         if (adminSignUp && requiresAdminApproval) {
@@ -83,11 +148,10 @@ export default function AuthForm({ onSuccess, requireAddress = true, adminSignUp
         setShowPrivacyAfterSignUp(true);
         return;
       }
-      await signIn(formData.login, formData.password);
+      await withTimeout(signIn(formData.login, formData.password), 20000, 'Sign in');
       onSuccess();
     } catch (err: unknown) {
-      const error = err as Error;
-      setError(error.message || 'An error occurred');
+      setError(formatAuthUiError(err, isSignUp ? 'Sign up' : 'Sign in'));
     } finally {
       setLoading(false);
     }
@@ -151,6 +215,8 @@ export default function AuthForm({ onSuccess, requireAddress = true, adminSignUp
                     required
                     value={formData.username}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                  autoCapitalize="none"
+                  autoCorrect="off"
                     className="w-full px-4 py-3 border border-gray-700 rounded-lg bg-black text-white focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
                     placeholder="e.g. oscar_jomer"
                   />
@@ -204,6 +270,9 @@ export default function AuthForm({ onSuccess, requireAddress = true, adminSignUp
                   ...(isSignUp ? { email: e.target.value } : { login: e.target.value }),
                 })
               }
+              autoCapitalize="none"
+              autoCorrect="off"
+              autoComplete={isSignUp || adminSignUp ? 'email' : 'username'}
               className="w-full px-4 py-3 border border-gray-700 rounded-lg bg-black text-white focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
               placeholder={isSignUp || adminSignUp ? 'Enter your email' : 'Enter email or username'}
             />
@@ -219,6 +288,7 @@ export default function AuthForm({ onSuccess, requireAddress = true, adminSignUp
                 required
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                autoComplete={isSignUp ? 'new-password' : 'current-password'}
                 className="w-full px-4 py-3 pr-11 border border-gray-700 rounded-lg bg-black text-white focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
                 placeholder="Enter your password"
                 minLength={6}
@@ -245,6 +315,7 @@ export default function AuthForm({ onSuccess, requireAddress = true, adminSignUp
                   required
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  autoComplete="new-password"
                   className="w-full px-4 py-3 pr-11 border border-gray-700 rounded-lg bg-black text-white focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
                   placeholder="Re-enter your password"
                   minLength={6}

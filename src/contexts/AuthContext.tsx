@@ -45,7 +45,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       (async () => {
         setUser(session?.user ?? null);
         if (session?.user) {
-          await fetchProfiles(session.user.id);
+          // Keep the app mounted during auth background events (e.g. token refresh).
+          await fetchProfiles(session.user.id, { silent: true });
         } else {
           setCustomerProfile(null);
           setAdminProfile(null);
@@ -58,9 +59,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchProfiles = async (userId: string) => {
-    setLoading(true);
-    setProfilesLoaded(false);
+  const fetchProfiles = async (userId: string, opts?: { silent?: boolean }) => {
+    const silent = !!opts?.silent;
+    if (!silent) {
+      setLoading(true);
+      setProfilesLoaded(false);
+    }
     try {
       const [{ data: cust, error: custErr }, { data: admin, error: adminErr }] = await Promise.all([
         supabase.from('customer_profiles').select('*').eq('id', userId).maybeSingle(),
@@ -75,14 +79,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Error fetching profile:', error);
     } finally {
       setProfilesLoaded(true);
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
   const refreshProfiles = async () => {
     const userId = user?.id;
     if (!userId) return;
-    await fetchProfiles(userId);
+    await fetchProfiles(userId, { silent: true });
   };
 
   const signUp = async (

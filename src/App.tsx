@@ -37,7 +37,7 @@ type PageId =
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<PageId>('home');
-  const { loading } = useAuth();
+  const { loading, profilesLoaded } = useAuth();
 
   useEffect(() => {
     const hash = window.location.hash.replace('#', '') as PageId | '';
@@ -104,7 +104,9 @@ function AppContent() {
       content = <HomePage onNavigate={handleNavigate} />;
   }
 
-  if (loading) {
+  // Only block initial boot. After profiles are loaded once, keep the app mounted
+  // even if background refreshes temporarily set `loading=true`, to avoid losing page state (game).
+  if (loading && !profilesLoaded) {
     return (
       <div className="min-h-screen w-full max-w-[100vw] overflow-x-hidden flex items-center justify-center bg-gradient-to-br from-black to-neutral-900">
         <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-yellow-400" />
