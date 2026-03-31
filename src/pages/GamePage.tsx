@@ -785,10 +785,12 @@ export default function GamePage({ onNavigate }: GamePageProps) {
                               {initial}
                             </div>
                           )}
-                          <div className="min-w-0 flex-1 flex flex-row items-start justify-between gap-2 sm:gap-3">
-                            <p className="min-w-0 flex-1 pr-1 font-bold text-gray-100 text-left text-sm sm:text-base leading-snug break-words [overflow-wrap:anywhere]">
-                              {row.display_name || 'Player'}
-                            </p>
+                          <div className="min-w-0 flex-1 flex flex-row items-start gap-2 sm:gap-3">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-center font-bold text-gray-100 text-sm sm:text-base leading-snug break-words [overflow-wrap:anywhere]">
+                                {row.display_name || 'Player'}
+                              </p>
+                            </div>
                             <span
                               className={`min-w-[2.25rem] text-right text-base sm:text-lg font-black tabular-nums shrink-0 leading-snug pt-0.5 ${
                                 difficulty === 'easy' ? 'text-emerald-300' : 'text-amber-300'
