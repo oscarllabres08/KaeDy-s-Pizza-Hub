@@ -8,7 +8,7 @@ type GamePageProps = {
 };
 
 type Difficulty = 'easy' | 'medium';
-type Phase = 'start' | 'leaderboard' | 'ready' | 'playing' | 'ended';
+type Phase = 'start' | 'math_start' | 'leaderboard' | 'wheel' | 'ready' | 'playing' | 'ended';
 type EndReason = 'time' | 'wrong';
 
 type Question = {
@@ -102,6 +102,18 @@ function makeChoices(correct: number): number[] {
   return shuffle(Array.from(choices));
 }
 
+type WheelSlice = { label: string; value: number; rate: number; color: string };
+const WHEEL_SLICES: WheelSlice[] = [
+  { label: '5', value: 5, rate: 0.2, color: '#534AB7' },
+  { label: '0', value: 0, rate: 0.09, color: '#6B6A66' },
+  { label: '8', value: 8, rate: 0.18, color: '#1D9E75' },
+  { label: '0', value: 0, rate: 0.09, color: '#6B6A66' },
+  { label: '15', value: 15, rate: 0.14, color: '#D85A30' },
+  { label: '0', value: 0, rate: 0.09, color: '#6B6A66' },
+  { label: '20', value: 20, rate: 0.12, color: '#D4537E' },
+  { label: '0', value: 0, rate: 0.09, color: '#6B6A66' },
+];
+
 /** Warm yellow “radiant” layers + soft glows (replaces flat black). */
 function GameRadiantBackdrop() {
   return (
@@ -134,7 +146,8 @@ function GameRadiantBackdrop() {
 
 export default function GamePage({ onNavigate }: GamePageProps) {
   const { user, refreshProfiles } = useAuth();
-  const [gameEnabled, setGameEnabled] = useState(true);
+  const [mathEnabled, setMathEnabled] = useState(true);
+  const [spinWheelEnabled, setSpinWheelEnabled] = useState(false);
   const [phase, setPhase] = useState<Phase>('start');
   const [difficulty, setDifficulty] = useState<Difficulty>('easy');
   const [timeLeft, setTimeLeft] = useState(GAME_SECONDS);
@@ -174,6 +187,13 @@ export default function GamePage({ onNavigate }: GamePageProps) {
   const [leaderboardRows, setLeaderboardRows] = useState<MathGameBestScore[]>([]);
   const [myBestScores, setMyBestScores] = useState<{ best_easy: number; best_medium: number } | null>(null);
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+
+  const wheelCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const wheelRotationRef = useRef(0);
+  const wheelSpinningRef = useRef(false);
+  const [wheelSpinning, setWheelSpinning] = useState(false);
+  const [wheelResult, setWheelResult] = useState<null | { value: number; label: string }>(null);
+  const [wheelPopup, setWheelPopup] = useState<null | { title: string; message: string; variant: 'win' | 'lose' | 'error' }>(null);
 
   const loadLeaderboard = useCallback(async () => {
     if (!user?.id) return;
@@ -279,6 +299,64 @@ export default function GamePage({ onNavigate }: GamePageProps) {
     checkGameSettings();
   }, [user]);
 
+  useEffect(() => {
+    if (phase !== 'wheel') return;
+    // Draw once when entering wheel phase (avoid relying on hook ordering)
+    requestAnimationFrame(() => {
+      const canvas = wheelCanvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const rotation = wheelRotationRef.current;
+      const n = WHEEL_SLICES.length;
+      const sliceAngle = (2 * Math.PI) / n;
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      const r = Math.min(cx, cy) - 10;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < n; i++) {
+        const start = rotation + i * sliceAngle;
+        const end = start + sliceAngle;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, r, start, end);
+        ctx.closePath();
+        ctx.fillStyle = WHEEL_SLICES[i].color;
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+      }
+
+      for (let i = 0; i < n; i++) {
+        const midAngle = rotation + i * sliceAngle + sliceAngle / 2;
+        const labelR = r * 0.65;
+        const lx = cx + labelR * Math.cos(midAngle);
+        const ly = cy + labelR * Math.sin(midAngle);
+        ctx.save();
+        ctx.translate(lx, ly);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 17px system-ui, -apple-system, Segoe UI, sans-serif';
+        ctx.shadowColor = 'rgba(0,0,0,0.4)';
+        ctx.shadowBlur = 4;
+        ctx.fillText(WHEEL_SLICES[i].label, 0, 0);
+        ctx.restore();
+      }
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, Math.max(12, r * 0.1), 0, 2 * Math.PI);
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+      ctx.strokeStyle = '#ddd';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    });
+  }, [phase]);
+
   // Restore prior game state when returning to the Game tab/page.
   useEffect(() => {
     if (restoredOnceRef.current) return;
@@ -296,7 +374,9 @@ export default function GamePage({ onNavigate }: GamePageProps) {
       }
       if (
         parsed.phase !== 'start' &&
+        parsed.phase !== 'math_start' &&
         parsed.phase !== 'leaderboard' &&
+        parsed.phase !== 'wheel' &&
         parsed.phase !== 'ready' &&
         parsed.phase !== 'playing' &&
         parsed.phase !== 'ended'
@@ -313,6 +393,7 @@ export default function GamePage({ onNavigate }: GamePageProps) {
         return;
       }
 
+      // Backward compatibility: old saved "ready" maps to leaderboard.
       setPhase(parsed.phase === 'ready' ? 'leaderboard' : parsed.phase);
       setDifficulty(parsed.difficulty);
       setTimeLeft(Math.max(0, Math.min(GAME_SECONDS, Number(parsed.timeLeft ?? GAME_SECONDS))));
@@ -415,7 +496,14 @@ export default function GamePage({ onNavigate }: GamePageProps) {
   }, []);
 
   useEffect(() => {
-    if (phase === 'start' || phase === 'leaderboard' || phase === 'ready' || phase === 'playing') {
+    if (
+      phase === 'start' ||
+      phase === 'math_start' ||
+      phase === 'leaderboard' ||
+      phase === 'wheel' ||
+      phase === 'ready' ||
+      phase === 'playing'
+    ) {
       scoreRecordedRef.current = false;
     }
   }, [phase]);
@@ -484,11 +572,12 @@ export default function GamePage({ onNavigate }: GamePageProps) {
   const checkGameSettings = async () => {
     const { data } = await supabase
       .from('game_settings')
-      .select('falling_pizza_active,is_active')
+      .select('falling_pizza_active,is_active,spin_wheel_active')
       .single();
 
     if (data) {
-      setGameEnabled((data.falling_pizza_active ?? data.is_active) === true);
+      setMathEnabled((data.falling_pizza_active ?? data.is_active) === true);
+      setSpinWheelEnabled((data.spin_wheel_active ?? false) === true);
     }
   };
 
@@ -497,6 +586,7 @@ export default function GamePage({ onNavigate }: GamePageProps) {
       onNavigate('auth');
       return;
     }
+    if (!mathEnabled) return;
     setDifficulty(d);
     setPhase('leaderboard');
     setLocked(false);
@@ -508,6 +598,7 @@ export default function GamePage({ onNavigate }: GamePageProps) {
       onNavigate('auth');
       return;
     }
+    if (!mathEnabled) return;
     playSound(gameStartAudioRef.current);
     setPhase('playing');
     setScore(0);
@@ -530,6 +621,148 @@ export default function GamePage({ onNavigate }: GamePageProps) {
     setQuestion(q);
     setChoices(makeChoices(q.correct));
   };
+
+  const pickWheelSliceIndex = () => {
+    const rand = Math.random();
+    let cumulative = 0;
+    for (let i = 0; i < WHEEL_SLICES.length; i++) {
+      cumulative += WHEEL_SLICES[i].rate;
+      if (rand < cumulative) return i;
+    }
+    return WHEEL_SLICES.length - 1;
+  };
+
+  const drawWheel = useCallback((rotation: number) => {
+    const canvas = wheelCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const n = WHEEL_SLICES.length;
+    const sliceAngle = (2 * Math.PI) / n;
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+    const r = Math.min(cx, cy) - 10;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (let i = 0; i < n; i++) {
+      const start = rotation + i * sliceAngle;
+      const end = start + sliceAngle;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r, start, end);
+      ctx.closePath();
+      ctx.fillStyle = WHEEL_SLICES[i].color;
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+    }
+
+    for (let i = 0; i < n; i++) {
+      const midAngle = rotation + i * sliceAngle + sliceAngle / 2;
+      const labelR = r * 0.65;
+      const lx = cx + labelR * Math.cos(midAngle);
+      const ly = cy + labelR * Math.sin(midAngle);
+      ctx.save();
+      ctx.translate(lx, ly);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 17px system-ui, -apple-system, Segoe UI, sans-serif';
+      ctx.shadowColor = 'rgba(0,0,0,0.4)';
+      ctx.shadowBlur = 4;
+      ctx.fillText(WHEEL_SLICES[i].label, 0, 0);
+      ctx.restore();
+    }
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, Math.max(12, r * 0.1), 0, 2 * Math.PI);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+    ctx.strokeStyle = '#ddd';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }, []);
+
+  const spinWheel = useCallback(() => {
+    if (!spinWheelEnabled) return;
+    if (!user) {
+      onNavigate('auth');
+      return;
+    }
+    if (wheelSpinningRef.current) return;
+    wheelSpinningRef.current = true;
+    setWheelSpinning(true);
+    setWheelResult(null);
+
+    const n = WHEEL_SLICES.length;
+    const sliceAngle = (2 * Math.PI) / n;
+    const winIndex = pickWheelSliceIndex();
+    const sliceCenter = winIndex * sliceAngle + sliceAngle / 2;
+    const pointerAngle = -Math.PI / 2;
+    const targetAngle = pointerAngle - sliceCenter;
+    const extraSpins = 2 * Math.PI * (5 + Math.floor(Math.random() * 3));
+    const finalRotation = targetAngle + extraSpins;
+
+    const duration = 3600;
+    const startRotation = wheelRotationRef.current;
+    const startTime = performance.now();
+    const easeOut = (t: number) => 1 - Math.pow(1 - t, 4);
+
+    const animate = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = easeOut(progress);
+      const rot = startRotation + (finalRotation - startRotation) * eased;
+      drawWheel(rot);
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        wheelRotationRef.current = finalRotation % (2 * Math.PI);
+        wheelSpinningRef.current = false;
+        setWheelSpinning(false);
+        const s = WHEEL_SLICES[winIndex];
+        setWheelResult({ value: s.value, label: s.label });
+        if (s.value > 0) {
+          void (async () => {
+            const { error } = await supabase.rpc('record_game_score', {
+              p_score: s.value,
+              p_difficulty: null,
+            });
+            if (error) {
+              const msg = typeof (error as any)?.message === 'string' ? String((error as any).message) : '';
+              // Cooldown/rejection is expected sometimes; don't spam console as an "error".
+              if (!msg.toLowerCase().includes('please wait before recording another game score')) {
+                console.error('record_game_score (wheel)', error);
+              }
+              setWheelPopup({
+                title: `You won ${s.value} points`,
+                message: msg || 'Could not add points right now. Please try again.',
+                variant: 'error',
+              });
+            } else {
+              await refreshProfiles();
+              setWheelPopup({
+                title: `You won ${s.value} points!`,
+                message: 'Added to your points.',
+                variant: 'win',
+              });
+            }
+          })();
+        } else {
+          setWheelPopup({
+            title: '0 points',
+            message: 'Better luck next time!',
+            variant: 'lose',
+          });
+        }
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [drawWheel, onNavigate, refreshProfiles, spinWheelEnabled, user]);
 
   const handlePick = (value: number) => {
     if (locked || phase !== 'playing') return;
@@ -582,7 +815,7 @@ export default function GamePage({ onNavigate }: GamePageProps) {
     );
   }
 
-  if (!gameEnabled) {
+  if (!mathEnabled && !spinWheelEnabled) {
     return (
       <div className="relative min-h-screen overflow-hidden bg-[#070604] py-16 px-4 flex items-center justify-center">
         <GameRadiantBackdrop />
@@ -598,6 +831,31 @@ export default function GamePage({ onNavigate }: GamePageProps) {
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#070604] py-10 px-4">
       <GameRadiantBackdrop />
+      {wheelPopup ? (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 px-4">
+          <div className="w-full max-w-sm rounded-2xl border border-yellow-500/25 bg-neutral-950/95 p-5 shadow-2xl">
+            <p
+              className={`text-lg font-black ${
+                wheelPopup.variant === 'win'
+                  ? 'text-emerald-200'
+                  : wheelPopup.variant === 'lose'
+                    ? 'text-yellow-200'
+                    : 'text-rose-200'
+              }`}
+            >
+              {wheelPopup.title}
+            </p>
+            <p className="text-sm text-gray-300 mt-2 leading-relaxed">{wheelPopup.message}</p>
+            <button
+              type="button"
+              onClick={() => setWheelPopup(null)}
+              className="mt-4 w-full rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-black px-5 py-3 font-black hover:from-amber-300 hover:to-orange-400 transition-all"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      ) : null}
       <div className="relative z-[1] max-w-xl mx-auto">
         <style>{`
           @keyframes shake {
@@ -613,24 +871,76 @@ export default function GamePage({ onNavigate }: GamePageProps) {
           }
         `}</style>
 
-        <div className="text-center mb-6 animate-fadeIn">
-          <div className="inline-flex items-center gap-2 rounded-full border border-yellow-500/35 bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-600/15 px-4 py-2 mb-4 shadow-lg shadow-black/40">
-            <Calculator className="w-4 h-4 text-yellow-300" />
-            <span className="text-xs font-extrabold tracking-wide bg-gradient-to-r from-yellow-200 to-amber-300 bg-clip-text text-transparent">
-              MULTIPLICATION CHALLENGE
-            </span>
+        {phase !== 'start' && phase !== 'wheel' ? (
+          <div className="text-center mb-6 animate-fadeIn">
+            <div className="inline-flex items-center gap-2 rounded-full border border-yellow-500/35 bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-600/15 px-4 py-2 mb-4 shadow-lg shadow-black/40">
+              <Calculator className="w-4 h-4 text-yellow-300" />
+              <span className="text-xs font-extrabold tracking-wide bg-gradient-to-r from-yellow-200 to-amber-300 bg-clip-text text-transparent">
+                MULTIPLICATION CHALLENGE
+              </span>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-black mb-2 tracking-tight text-heading-primary drop-shadow-sm">
+              Math Challenge
+            </h1>
+            <p className="text-sm md:text-base text-gray-200/90 leading-relaxed">
+              Answer as many multiplication questions as you can in{' '}
+              <span className="text-amber-300 font-bold">{GAME_SECONDS}</span> seconds.
+            </p>
           </div>
-          <h1 className="text-3xl md:text-4xl font-black mb-2 tracking-tight text-heading-primary drop-shadow-sm">
-            Math Challenge
-          </h1>
-          <p className="text-sm md:text-base text-gray-200/90 leading-relaxed">
-            Answer as many multiplication questions as you can in{' '}
-            <span className="text-amber-300 font-bold">{GAME_SECONDS}</span> seconds.
-          </p>
-        </div>
+        ) : null}
 
         <div className="rounded-3xl border border-yellow-500/20 bg-neutral-900/80 backdrop-blur-xl p-6 md:p-8 shadow-[0_0_50px_-12px_rgba(234,179,8,0.12),0_25px_60px_rgba(0,0,0,0.55)] ring-1 ring-yellow-500/15">
           {phase === 'start' && (
+            <div className="text-center">
+              <h2 className="text-2xl font-black mb-2 tracking-tight text-heading-secondary">Choose a game</h2>
+              <p className="text-sm text-gray-300/90 mb-5">Pick a game to play and earn points.</p>
+
+              <div className="grid grid-cols-1 gap-4">
+                <button
+                  type="button"
+                  onClick={() => setPhase('math_start')}
+                  disabled={!mathEnabled}
+                  className={`group rounded-2xl border-2 px-5 py-5 text-left shadow-md transition-all active:scale-[0.99] ${
+                    mathEnabled
+                      ? 'border-yellow-500/35 bg-gradient-to-br from-amber-600/20 via-yellow-600/10 to-black/50 hover:border-yellow-400/60 hover:shadow-amber-500/20 hover:shadow-lg'
+                      : 'border-white/10 bg-black/30 opacity-60 cursor-not-allowed'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="text-yellow-100 font-black text-lg drop-shadow-sm">Math Challenge</p>
+                    <span className="text-[11px] font-extrabold text-yellow-100 border border-yellow-500/45 bg-amber-600/30 rounded-full px-2 py-0.5">
+                      {mathEnabled ? `${GAME_SECONDS}s run` : 'Disabled'}
+                    </span>
+                  </div>
+                  <p className="text-amber-100/80 text-sm mt-2">Multiplication questions · Easy/Medium</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setWheelResult(null);
+                    setPhase('wheel');
+                  }}
+                  disabled={!spinWheelEnabled}
+                  className={`group rounded-2xl border-2 px-5 py-5 text-left shadow-md transition-all active:scale-[0.99] ${
+                    spinWheelEnabled
+                      ? 'border-teal-500/40 bg-gradient-to-br from-teal-500/20 via-emerald-500/10 to-black/60 hover:border-teal-300/60 hover:shadow-emerald-400/20 hover:shadow-lg'
+                      : 'border-white/10 bg-black/30 opacity-60 cursor-not-allowed'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-teal-100 font-black text-lg drop-shadow-sm">Spin the Wheel</p>
+                    <span className="text-[11px] font-extrabold text-teal-100 border border-teal-400/40 bg-teal-500/25 rounded-full px-2 py-0.5">
+                      {spinWheelEnabled ? 'up to +20 pts' : 'Disabled'}
+                    </span>
+                  </div>
+                  <p className="text-teal-100/80 text-sm mt-2">One spin = chance to win points.</p>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {phase === 'math_start' && (
             <div className="text-center">
               <div
                 className="mx-auto mb-6 w-20 h-20 rounded-3xl bg-gradient-to-br from-amber-500/25 to-yellow-600/20 border border-yellow-500/25 flex items-center justify-center shadow-inner shadow-amber-900/30"
@@ -638,9 +948,7 @@ export default function GamePage({ onNavigate }: GamePageProps) {
               >
                 <Calculator className="w-10 h-10 text-amber-200" />
               </div>
-              <h2 className="text-2xl font-black mb-2 tracking-tight text-heading-secondary">
-                Choose difficulty
-              </h2>
+              <h2 className="text-2xl font-black mb-2 tracking-tight text-heading-secondary">Choose difficulty</h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <button
@@ -668,6 +976,65 @@ export default function GamePage({ onNavigate }: GamePageProps) {
                   </div>
                   <p className="text-amber-100/90 text-sm mt-2">2-digit × 1-digit</p>
                   <p className="text-yellow-300/80 text-xs mt-1">Example: 12 × 4</p>
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setPhase('start')}
+                className="mt-5 w-full rounded-2xl border-2 border-yellow-500/35 bg-neutral-900/80 px-5 py-3.5 font-black text-yellow-200 hover:bg-neutral-800/90 transition-all active:scale-[0.99]"
+              >
+                Back
+              </button>
+            </div>
+          )}
+
+          {phase === 'wheel' && (
+            <div className="text-center">
+              <div className="mx-auto mb-5 w-20 h-20 rounded-3xl bg-gradient-to-br from-teal-500/25 to-emerald-600/15 border border-teal-400/35 flex items-center justify-center shadow-lg shadow-emerald-900/25">
+                <Trophy className="w-10 h-10 text-teal-200" />
+              </div>
+              <h2 className="text-2xl md:text-3xl font-black mb-2 tracking-tight text-heading-primary">
+                Spin the Wheel
+              </h2>
+              <p className="text-xs text-gray-500 mb-5">Win points for your rewards wallet.</p>
+
+              <div className="flex flex-col items-center gap-4">
+                <div className="relative w-72 h-72 sm:w-80 sm:h-80">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[28px] border-t-rose-500 z-10" />
+                  <canvas
+                    ref={wheelCanvasRef}
+                    width={320}
+                    height={320}
+                    className="rounded-full block w-full h-full shadow-[0_0_35px_rgba(16,185,129,0.18)] border border-white/10 bg-black"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={spinWheel}
+                  disabled={wheelSpinning}
+                  className="w-full rounded-2xl bg-gradient-to-r from-teal-300 via-emerald-400 to-yellow-300 text-black px-5 py-3.5 font-black hover:from-teal-200 hover:via-emerald-300 hover:to-yellow-200 transition-all active:scale-[0.99] shadow-lg shadow-emerald-500/20 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {wheelSpinning ? 'Spinning…' : 'Spin'}
+                </button>
+
+                <div className="min-h-[44px]">
+                  {wheelResult ? (
+                    <p className="text-sm font-extrabold text-gray-100">
+                      {wheelResult.value === 0 ? 'Better luck next time! (0)' : `You won ${wheelResult.value} points!`}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-gray-500">Tap Spin to try your luck.</p>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setPhase('start')}
+                  className="w-full rounded-2xl border-2 border-yellow-500/35 bg-neutral-900/80 px-5 py-3.5 font-black text-yellow-200 hover:bg-neutral-800/90 transition-all active:scale-[0.99]"
+                >
+                  Back
                 </button>
               </div>
             </div>
